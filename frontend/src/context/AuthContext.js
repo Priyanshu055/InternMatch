@@ -27,7 +27,12 @@ export const AuthProvider = ({ children }) => {
   };
 
   const register = async (name, email, password, role) => {
-    await axios.post('http://localhost:5000/api/auth/register', { name, email, password, role });
+    try {
+      const res = await axios.post('http://localhost:5000/api/auth/register', { name, email, password, role });
+      return res.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Registration failed');
+    }
   };
 
   const logout = () => {

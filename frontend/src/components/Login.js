@@ -16,7 +16,7 @@ const Login = () => {
       await login(email, password);
       navigate('/dashboard');
     } catch (error) {
-      alert('Login failed');
+      alert(error.message);
     }
   };
 

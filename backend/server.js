@@ -12,7 +12,7 @@ app.use(express.json());
 app.use('/uploads', express.static('uploads'));
 
 // MongoDB connection
-mongoose.connect('mongodb+srv://Priyanshu_05:XpPmJF2cFyFiJp7h@cluster0.bhfxe7p.mongodb.net/?retryWrites=true&w=majority', {
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/internship_recommendation', {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })

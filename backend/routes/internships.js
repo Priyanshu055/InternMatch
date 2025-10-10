@@ -45,6 +45,20 @@ router.get('/recommended', auth, async (req, res) => {
   }
 });
 
+// Get internships posted by the employer
+router.get('/employer', auth, async (req, res) => {
+  try {
+    if (req.user.role !== 'Employer') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+    const internships = await Internship.find({ company_id: req.user.userId }).populate('company_id', 'name');
+    res.json(internships);
+  } catch (error) {
+    console.error('Get employer internships error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // Get internship by ID
 router.get('/:id', async (req, res) => {
   try {
@@ -65,7 +79,7 @@ router.post('/', auth, async (req, res) => {
     if (req.user.role !== 'Employer') {
       return res.status(403).json({ message: 'Access denied' });
     }
-    const { title, description, required_skills, location, stipend, duration } = req.body;
+    const { title, description, required_skills, location, stipend, duration, applicationDeadline } = req.body;
     const internship = new Internship({
       title,
       company_id: req.user.userId,
@@ -74,6 +88,7 @@ router.post('/', auth, async (req, res) => {
       location,
       stipend,
       duration,
+      applicationDeadline,
     });
     await internship.save();
     res.status(201).json(internship);

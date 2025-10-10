@@ -8,6 +8,7 @@ const internshipSchema = new mongoose.Schema({
   location: { type: String },
   stipend: { type: String },
   duration: { type: String },
+  applicationDeadline: { type: Date },
   posted_date: { type: Date, default: Date.now },
 }, { timestamps: true });
 

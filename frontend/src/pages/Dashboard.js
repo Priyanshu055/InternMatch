@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FaSignOutAlt, FaUser, FaBriefcase, FaPaperPlane, FaCheck, FaTimes, FaPercentage, FaRocket, FaUsers, FaSearch, FaFilter, FaBookmark, FaBell, FaChartBar, FaEnvelope, FaGraduationCap, FaHome, FaList, FaStar, FaCog } from 'react-icons/fa';
 import AuthContext from '../context/AuthContext';
@@ -8,6 +8,7 @@ import axios from 'axios';
 const Dashboard = () => {
   const { user, logout } = useContext(AuthContext);
   const location = useLocation();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
   const [internships, setInternships] = useState([]);
   const [allInternships, setAllInternships] = useState([]);
@@ -857,6 +858,7 @@ const Dashboard = () => {
                             <motion.button
                               whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.95 }}
+                              onClick={() => navigate(`/edit-internship/${internship._id}`)}
                               className="flex-1 bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition duration-200"
                             >
                               Edit
@@ -864,6 +866,7 @@ const Dashboard = () => {
                             <motion.button
                               whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.95 }}
+                              onClick={() => deleteInternship(internship._id)}
                               className="flex-1 bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition duration-200"
                             >
                               Delete

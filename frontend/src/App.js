@@ -8,6 +8,7 @@ import Register from './components/Register';
 import Dashboard from './pages/Dashboard';
 import CandidateProfile from './pages/CandidateProfile';
 import PostInternship from './pages/PostInternship';
+import EditInternship from './pages/EditInternship';
 
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useContext(AuthContext);
@@ -39,6 +40,11 @@ function App() {
           <Route path="/post-internship" element={
             <PrivateRoute>
               <PostInternship />
+            </PrivateRoute>
+          } />
+          <Route path="/edit-internship/:id" element={
+            <PrivateRoute>
+              <EditInternship />
             </PrivateRoute>
           } />
           <Route path="*" element={<Navigate to="/" />} />

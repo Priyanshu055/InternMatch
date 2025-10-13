@@ -40,7 +40,7 @@ router.post('/', auth, async (req, res) => {
     if (req.user.role !== 'Candidate') {
       return res.status(403).json({ message: 'Access denied' });
     }
-    const { internship_id } = req.body;
+    const { internship_id, cover_letter, resume_url, additional_info } = req.body;
     const existingApplication = await Application.findOne({ candidate_id: req.user.userId, internship_id });
     if (existingApplication) {
       return res.status(400).json({ message: 'Already applied' });
@@ -48,6 +48,9 @@ router.post('/', auth, async (req, res) => {
     const application = new Application({
       candidate_id: req.user.userId,
       internship_id,
+      cover_letter,
+      resume_url,
+      additional_info,
     });
     await application.save();
     res.status(201).json(application);

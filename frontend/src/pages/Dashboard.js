@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FaSignOutAlt, FaUser, FaBriefcase, FaPaperPlane, FaCheck, FaTimes, FaPercentage, FaRocket, FaUsers, FaSearch, FaFilter, FaBookmark, FaBell, FaChartBar, FaEnvelope, FaGraduationCap, FaHome, FaList, FaStar, FaCog } from 'react-icons/fa';
 import AuthContext from '../context/AuthContext';
+import ApplyModal from '../components/ApplyModal';
 import axios from 'axios';
 
 const Dashboard = () => {
@@ -24,6 +25,8 @@ const Dashboard = () => {
   const [loadingSavedInternships, setLoadingSavedInternships] = useState(false);
   const [loadingEmployerApplications, setLoadingEmployerApplications] = useState(false);
   const [loadingEmployerInternships, setLoadingEmployerInternships] = useState(false);
+  const [applyModalOpen, setApplyModalOpen] = useState(false);
+  const [selectedInternship, setSelectedInternship] = useState(null);
 
   useEffect(() => {
     if (user?.role === 'Candidate') {

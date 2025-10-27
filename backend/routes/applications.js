@@ -73,6 +73,15 @@ router.post('/', auth, upload.single('resume'), async (req, res) => {
     }
     const { internship_id, cover_letter, resume_url, additional_info } = req.body;
 
+    // Check if candidate has already applied for this internship
+    const existingApplication = await Application.findOne({
+      candidate_id: req.user.userId,
+      internship_id: internship_id
+    });
+
+    if (existingApplication) {
+      return res.status(400).json({ message: 'You have already applied for this internship' });
+    }
 
     let resumePath = resume_url; // Default to URL if provided
     if (req.file) {

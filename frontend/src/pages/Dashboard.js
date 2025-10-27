@@ -1,7 +1,7 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FaSignOutAlt, FaUser, FaBriefcase, FaPaperPlane, FaCheck, FaTimes, FaPercentage, FaRocket, FaUsers, FaSearch, FaFilter, FaBookmark, FaBell, FaChartBar, FaEnvelope, FaGraduationCap, FaHome, FaList, FaStar, FaCog } from 'react-icons/fa';
+import { FaSignOutAlt, FaUser, FaBriefcase, FaPaperPlane, FaCheck, FaTimes, FaPercentage, FaRocket, FaUsers, FaSearch, FaFilter, FaBookmark, FaBell, FaChartBar, FaEnvelope, FaGraduationCap, FaHome, FaList, FaStar, FaCog, FaFileUpload } from 'react-icons/fa';
 import AuthContext from '../context/AuthContext';
 import ApplyModal from '../components/ApplyModal';
 import axios from 'axios';
@@ -17,6 +17,7 @@ const Dashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterLocation, setFilterLocation] = useState('');
   const [savedInternships, setSavedInternships] = useState([]);
+  const [savedInternshipIds, setSavedInternshipIds] = useState(new Set());
   const [employerInternships, setEmployerInternships] = useState([]);
   const [messages, setMessages] = useState([]);
   const [loadingInternships, setLoadingInternships] = useState(false);
@@ -25,8 +26,16 @@ const Dashboard = () => {
   const [loadingSavedInternships, setLoadingSavedInternships] = useState(false);
   const [loadingEmployerApplications, setLoadingEmployerApplications] = useState(false);
   const [loadingEmployerInternships, setLoadingEmployerInternships] = useState(false);
+  const [loadingMessages, setLoadingMessages] = useState(false);
   const [applyModalOpen, setApplyModalOpen] = useState(false);
   const [selectedInternship, setSelectedInternship] = useState(null);
+  const [selectedApplication, setSelectedApplication] = useState(null);
+  const [messageModalOpen, setMessageModalOpen] = useState(false);
+  const [candidateProfile, setCandidateProfile] = useState(null);
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [messageText, setMessageText] = useState('');
+  const [sendMessageModalOpen, setSendMessageModalOpen] = useState(false);
+  const [selectedAppForMessage, setSelectedAppForMessage] = useState(null);
 
   useEffect(() => {
     if (user?.role === 'Candidate') {
@@ -42,34 +51,38 @@ const Dashboard = () => {
     }
   }, [user]);
 
-  const fetchRecommendedInternships = async () => {
+  useEffect(() => {
+    setSavedInternshipIds(new Set(savedInternships.map(save => save._id)));
+  }, [savedInternships]);
+
+  const fetchRecommendedInternships = useCallback(async () => {
     try {
       const res = await axios.get('http://localhost:5000/api/internships/recommended');
       setInternships(res.data);
     } catch (error) {
       console.error('Error fetching internships:', error);
     }
-  };
+  }, []);
 
-  const fetchAllInternships = async () => {
+  const fetchAllInternships = useCallback(async () => {
     try {
       const res = await axios.get('http://localhost:5000/api/internships');
       setAllInternships(res.data);
     } catch (error) {
       console.error('Error fetching all internships:', error);
     }
-  };
+  }, []);
 
-  const fetchApplications = async () => {
+  const fetchApplications = useCallback(async () => {
     try {
       const res = await axios.get('http://localhost:5000/api/applications/candidate');
       setApplications(res.data);
     } catch (error) {
       console.error('Error fetching applications:', error);
     }
-  };
+  }, []);
 
-  const fetchEmployerApplications = async () => {
+  const fetchEmployerApplications = useCallback(async () => {
     setLoadingEmployerApplications(true);
     try {
       const res = await axios.get('http://localhost:5000/api/applications/employer');
@@ -79,9 +92,9 @@ const Dashboard = () => {
     } finally {
       setLoadingEmployerApplications(false);
     }
-  };
+  }, []);
 
-  const fetchEmployerInternships = async () => {
+  const fetchEmployerInternships = useCallback(async () => {
     setLoadingEmployerInternships(true);
     try {
       const res = await axios.get('http://localhost:5000/api/internships/employer');
@@ -91,23 +104,57 @@ const Dashboard = () => {
     } finally {
       setLoadingEmployerInternships(false);
     }
-  };
+  }, []);
 
-  const fetchSavedInternships = async () => {
+  const fetchSavedInternships = useCallback(async () => {
     try {
       const res = await axios.get('http://localhost:5000/api/internships/saved');
       setSavedInternships(res.data);
     } catch (error) {
       console.error('Error fetching saved internships:', error);
     }
+  }, []);
+
+  const fetchMessages = useCallback(async () => {
+    setLoadingMessages(true);
+    try {
+      const endpoint = user.role === 'Candidate' ? 'candidate' : 'employer';
+      const res = await axios.get(`http://localhost:5000/api/messages/${endpoint}`);
+      setMessages(res.data);
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+    } finally {
+      setLoadingMessages(false);
+    }
+  }, [user]);
+
+  const sendMessage = async (applicationId, message) => {
+    try {
+      await axios.post('http://localhost:5000/api/messages', { application_id: applicationId, message });
+      alert('Message sent successfully');
+      fetchMessages();
+    } catch (error) {
+      alert('Failed to send message');
+    }
   };
 
-  const fetchMessages = () => {
-    setMessages([
-      { id: 1, from: 'TechCorp', message: 'Thank you for applying! We will review your application soon.', unread: true, date: new Date() },
-      { id: 2, from: 'Innovate Ltd', message: 'Your profile looks great. We might have a position for you.', unread: false, date: new Date(Date.now() - 86400000) },
-      { id: 3, from: 'StartupXYZ', message: 'Interview scheduled for next week.', unread: true, date: new Date(Date.now() - 172800000) }
-    ]);
+  const fetchCandidateProfile = async (applicationId) => {
+    try {
+      const res = await axios.get(`http://localhost:5000/api/messages/candidate-profile/${applicationId}`);
+      setCandidateProfile(res.data);
+      setProfileModalOpen(true);
+    } catch (error) {
+      alert('Failed to fetch candidate profile');
+    }
+  };
+
+  const markMessageAsRead = async (messageId) => {
+    try {
+      await axios.put(`http://localhost:5000/api/messages/${messageId}/read`);
+      fetchMessages();
+    } catch (error) {
+      console.error('Error marking message as read:', error);
+    }
   };
 
   const applyForInternship = (internship) => {
@@ -117,25 +164,43 @@ const Dashboard = () => {
 
   const handleApplySuccess = () => {
     fetchApplications();
+    fetchSavedInternships();
   };
 
-  const saveInternship = async (internshipId) => {
+  const saveInternship = async (internship) => {
+    const internshipId = internship._id;
+    // Optimistically update UI
+    setSavedInternshipIds(prev => new Set([...prev, internshipId]));
     try {
       await axios.post('http://localhost:5000/api/internships/save', { internship_id: internshipId });
       alert('Saved successfully');
-      fetchSavedInternships();
+      fetchSavedInternships(); // Ensure consistency
     } catch (error) {
       alert('Save failed');
+      // Revert optimistic update
+      setSavedInternshipIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(internshipId);
+        return newSet;
+      });
     }
   };
 
   const unsaveInternship = async (internshipId) => {
+    // Optimistically update UI
+    setSavedInternshipIds(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(internshipId);
+      return newSet;
+    });
     try {
       await axios.delete(`http://localhost:5000/api/internships/saved/${internshipId}`);
       alert('Unsaved successfully');
-      fetchSavedInternships();
+      fetchSavedInternships(); // Ensure consistency
     } catch (error) {
       alert('Unsave failed');
+      // Revert optimistic update
+      setSavedInternshipIds(prev => new Set([...prev, internshipId]));
     }
   };
 
@@ -173,10 +238,11 @@ const Dashboard = () => {
     }
   };
 
-  const filteredInternships = allInternships.filter(internship =>
-    internship.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
-    (filterLocation === '' || internship.location.toLowerCase().includes(filterLocation.toLowerCase()))
-  );
+  const filteredInternships = useMemo(() =>
+    allInternships.filter(internship =>
+      internship.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
+      (filterLocation === '' || internship.location.toLowerCase().includes(filterLocation.toLowerCase()))
+    ), [allInternships, searchTerm, filterLocation]);
 
   if (!user) return <div className="flex justify-center items-center h-screen"><div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div></div>;
 
@@ -467,29 +533,49 @@ const Dashboard = () => {
                         <p className="text-gray-600 mb-4">{internship.description.substring(0, 100)}...</p>
                         <div className="flex items-center justify-between mb-4">
                           <span className="text-sm text-gray-500">{internship.location}</span>
-                          <span className="text-sm font-medium text-blue-600 bg-blue-100 px-2 py-1 rounded-full">
-                            {internship.company_id.name}
-                          </span>
+                          <div className="flex items-center space-x-2">
+                            {internship.company_id.profileImage && (
+                              <img
+                                src={`http://localhost:5000${internship.company_id.profileImage}`}
+                                alt={`${internship.company_id.name} profile`}
+                                className="w-6 h-6 rounded-full object-cover"
+                              />
+                            )}
+                            <span className="text-sm font-medium text-blue-600 bg-blue-100 px-2 py-1 rounded-full">
+                              {internship.company_id.name}
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex space-x-2">
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => applyForInternship(internship)}
-                            className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-2 rounded-lg hover:from-blue-600 hover:to-purple-700 transition duration-200 flex items-center justify-center space-x-2 shadow-lg"
-                          >
-                            <FaPaperPlane />
-                            <span>Apply</span>
-                          </motion.button>
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => saveInternship(internship._id)}
-                            className="p-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition duration-200"
-                          >
-                            <FaBookmark className="text-gray-600" />
-                          </motion.button>
-                        </div>
+                          <div className="flex space-x-2">
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => applyForInternship(internship)}
+                              className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-2 rounded-lg hover:from-blue-600 hover:to-purple-700 transition duration-200 flex items-center justify-center space-x-2 shadow-lg"
+                            >
+                              <FaPaperPlane />
+                              <span>Apply</span>
+                            </motion.button>
+                            {savedInternshipIds.has(internship._id) ? (
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => unsaveInternship(internship)}
+                                className="p-2 bg-red-100 rounded-lg hover:bg-red-200 transition duration-200"
+                              >
+                                <FaTimes className="text-red-600" />
+                              </motion.button>
+                            ) : (
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => saveInternship(internship)}
+                                className="p-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition duration-200"
+                              >
+                                <FaBookmark className="text-gray-600" />
+                              </motion.button>
+                            )}
+                          </div>
                       </motion.div>
                     ))}
                   </motion.div>
@@ -532,6 +618,17 @@ const Dashboard = () => {
                           <div className="text-sm text-gray-500">
                             Applied on: {new Date(app.createdAt).toLocaleDateString()}
                           </div>
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => {
+                              setSelectedAppForMessage(app);
+                              setSendMessageModalOpen(true);
+                            }}
+                            className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-200"
+                          >
+                            Send Message
+                          </motion.button>
                         </motion.div>
                       ))}
                     </motion.div>
@@ -570,9 +667,18 @@ const Dashboard = () => {
                           <p className="text-gray-600 mb-4">{internship.description.substring(0, 100)}...</p>
                           <div className="flex items-center justify-between mb-4">
                             <span className="text-sm text-gray-500">{internship.location}</span>
-                          <span className="text-sm font-medium text-blue-600 bg-blue-100 px-2 py-1 rounded-full">
-                            {internship.company_id.name}
-                          </span>
+                            <div className="flex items-center space-x-2">
+                              {internship.company_id.profileImage && (
+                                <img
+                                  src={`http://localhost:5000${internship.company_id.profileImage}`}
+                                  alt={`${internship.company_id.name} profile`}
+                                  className="w-6 h-6 rounded-full object-cover"
+                                />
+                              )}
+                              <span className="text-sm font-medium text-blue-600 bg-blue-100 px-2 py-1 rounded-full">
+                                {internship.company_id.name}
+                              </span>
+                            </div>
                           </div>
                           <div className="flex space-x-2">
                             <motion.button
@@ -917,6 +1023,19 @@ const Dashboard = () => {
                           <p className={`text-sm font-medium mb-4 px-3 py-1 rounded-full inline-block ${app.status === 'Approved' ? 'text-green-600 bg-green-100' : app.status === 'Rejected' ? 'text-red-600 bg-red-100' : 'text-yellow-600 bg-yellow-100'}`}>
                             Status: {app.status}
                           </p>
+                          {app.resume_url && (
+                            <div className="mb-4">
+                              <a
+                                href={`http://localhost:5000/${app.resume_url}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center space-x-2 text-blue-600 hover:text-blue-800 transition duration-200"
+                              >
+                                <FaFileUpload />
+                                <span>View Resume</span>
+                              </a>
+                            </div>
+                          )}
                           <div className="flex space-x-2">
                             <motion.button
                               whileHover={{ scale: 1.05 }}
@@ -981,7 +1100,51 @@ const Dashboard = () => {
                     <FaEnvelope className="text-blue-500" />
                     <span>Messages</span>
                   </h2>
-                  <p className="text-gray-600">Messages from candidates will appear here.</p>
+                  {messages.length > 0 ? (
+                    <motion.div
+                      variants={containerVariants}
+                      initial="hidden"
+                      animate="visible"
+                      className="space-y-4"
+                    >
+                      {messages.map((msg, index) => (
+                        <motion.div
+                          key={msg._id}
+                          variants={itemVariants}
+                          whileHover={{ scale: 1.02 }}
+                          className={`bg-white p-6 rounded-xl shadow-xl border border-gray-200 ${!msg.is_read ? 'border-l-4 border-l-blue-500' : ''}`}
+                        >
+                          <div className="flex justify-between items-start mb-2">
+                            <h3 className="text-lg font-semibold text-gray-800">{msg.sender_id.name} - {msg.application_id.internship_id.title}</h3>
+                            <span className="text-sm text-gray-500">{new Date(msg.createdAt).toLocaleDateString()}</span>
+                          </div>
+                          <p className="text-gray-600 mb-4">{msg.message}</p>
+                          <div className="flex space-x-2">
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => fetchCandidateProfile(msg.application_id._id)}
+                              className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-200"
+                            >
+                              View Profile
+                            </motion.button>
+                            {!msg.is_read && (
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => markMessageAsRead(msg._id)}
+                                className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition duration-200"
+                              >
+                                Mark as Read
+                              </motion.button>
+                            )}
+                          </div>
+                        </motion.div>
+                      ))}
+                    </motion.div>
+                  ) : (
+                    <p className="text-gray-600">No messages yet. Messages from candidates will appear here.</p>
+                  )}
                 </motion.div>
               )}
 
@@ -1005,6 +1168,77 @@ const Dashboard = () => {
           )}
         </main>
       </div>
+
+      {/* Send Message Modal */}
+      {sendMessageModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold mb-4">Send Message to Employer</h3>
+            <textarea
+              value={messageText}
+              onChange={(e) => setMessageText(e.target.value)}
+              placeholder="Type your message here..."
+              className="w-full p-2 border border-gray-300 rounded-lg mb-4"
+              rows="4"
+            ></textarea>
+            <div className="flex space-x-2">
+              <button
+                onClick={() => {
+                  sendMessage(selectedAppForMessage._id, messageText);
+                  setSendMessageModalOpen(false);
+                  setMessageText('');
+                }}
+                className="flex-1 bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600"
+              >
+                Send
+              </button>
+              <button
+                onClick={() => { setSendMessageModalOpen(false); setMessageText(''); }}
+                className="flex-1 bg-gray-500 text-white py-2 rounded-lg hover:bg-gray-600"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Candidate Profile Modal */}
+      {profileModalOpen && candidateProfile && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg max-w-2xl w-full mx-4 max-h-96 overflow-y-auto">
+            <h3 className="text-lg font-semibold mb-4">Candidate Profile</h3>
+            <div className="space-y-4">
+              <div>
+                <strong>Name:</strong> {candidateProfile.user.name}
+              </div>
+              <div>
+                <strong>Email:</strong> {candidateProfile.user.email}
+              </div>
+              <div>
+                <strong>Skills:</strong> {candidateProfile.profile.skills.join(', ')}
+              </div>
+              <div>
+                <strong>Education:</strong> {candidateProfile.profile.education}
+              </div>
+              <div>
+                <strong>Experience:</strong> {candidateProfile.profile.experience}
+              </div>
+              {candidateProfile.profile.resume_url && (
+                <div>
+                  <a href={`http://localhost:5000/${candidateProfile.profile.resume_url}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">View Resume</a>
+                </div>
+              )}
+            </div>
+            <button
+              onClick={() => setProfileModalOpen(false)}
+              className="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

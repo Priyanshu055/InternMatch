@@ -1,6 +1,6 @@
 import React, { useState, useContext } from 'react';
 import { motion } from 'framer-motion';
-import { FaTimes, FaPaperPlane } from 'react-icons/fa';
+import { FaTimes, FaPaperPlane, FaFileUpload } from 'react-icons/fa';
 import AuthContext from '../context/AuthContext';
 import axios from 'axios';
 
@@ -11,25 +11,61 @@ const ApplyModal = ({ internship, onClose, onApply }) => {
     resume_url: '',
     additional_info: '',
   });
+  const [resumeFile, setResumeFile] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handleFileChange = (e) => {
+    setResumeFile(e.target.files[0]);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      await axios.post('http://localhost:5000/api/applications', {
-        internship_id: internship._id,
-        ...formData,
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('You must be logged in to apply.');
+        setLoading(false);
+        return;
+      }
+
+      const formDataToSend = new FormData();
+      formDataToSend.append('internship_id', internship._id);
+      formDataToSend.append('cover_letter', formData.cover_letter);
+      formDataToSend.append('resume_url', formData.resume_url);
+      formDataToSend.append('additional_info', formData.additional_info);
+      if (resumeFile) {
+        formDataToSend.append('resume', resumeFile);
+      }
+
+      await axios.post('http://localhost:5000/api/applications', formDataToSend, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${token}`,
+        },
       });
+
+      // Auto-save the internship after applying
+      await axios.post('http://localhost:5000/api/internships/save', { internship_id: internship._id }, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
       alert('Applied successfully!');
       onApply();
       onClose();
     } catch (error) {
-      alert('Application failed. Please try again.');
+      console.error('Application error:', error);
+      if (error.response) {
+        alert(`Application failed: ${error.response.data.message}`);
+      } else {
+        alert('Application failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -65,15 +101,24 @@ const ApplyModal = ({ internship, onClose, onApply }) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Resume URL (Optional)</label>
-            <input
-              type="url"
-              name="resume_url"
-              value={formData.resume_url}
-              onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="https://example.com/resume.pdf"
-            />
+            <label className="block text-sm font-medium text-gray-700 mb-1">Resume (Optional)</label>
+            <div className="space-y-2">
+              <input
+                type="file"
+                accept=".pdf,.doc,.docx"
+                onChange={handleFileChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+              />
+              <p className="text-xs text-gray-500">Or provide a URL below</p>
+              <input
+                type="url"
+                name="resume_url"
+                value={formData.resume_url}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="https://example.com/resume.pdf"
+              />
+            </div>
           </div>
 
           <div>

@@ -1,21 +1,18 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { FaUser, FaGraduationCap, FaBriefcase, FaFileUpload, FaRocket, FaSave, FaEye, FaBuilding, FaIndustry, FaGlobe, FaInfoCircle } from 'react-icons/fa';
+import { FaUser, FaGraduationCap, FaBriefcase, FaFileUpload, FaRocket, FaSave, FaEye, FaBuilding, FaIndustry, FaGlobe, FaInfoCircle, FaCamera } from 'react-icons/fa';
 import AuthContext from '../context/AuthContext';
 import axios from 'axios';
 
 const CandidateProfile = () => {
-  const { user } = useContext(AuthContext);
+  const { user, setUser } = useContext(AuthContext);
   const [profile, setProfile] = useState({ skills: [], education: '', experience: '', resume_url: '' });
   const [employerProfile, setEmployerProfile] = useState({ company: '', industry: '', website: '', description: '' });
   const [skillsInput, setSkillsInput] = useState('');
   const [file, setFile] = useState(null);
+  const [profileImageFile, setProfileImageFile] = useState(null);
 
-  useEffect(() => {
-    fetchProfile();
-  }, []);
-
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     try {
       const res = await axios.get('http://localhost:5000/api/profiles');
       if (user?.role === 'Candidate') {
@@ -27,7 +24,11 @@ const CandidateProfile = () => {
     } catch (error) {
       console.error('Error fetching profile:', error);
     }
-  };
+  }, [user?.role]);
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
 
   const updateProfile = async (e) => {
     e.preventDefault();
@@ -56,6 +57,25 @@ const CandidateProfile = () => {
       });
       alert('Resume uploaded');
       setProfile({ ...profile, resume_url: res.data.resume_url });
+    } catch (error) {
+      alert('Upload failed');
+    }
+  };
+
+  const uploadProfileImage = async (e) => {
+    e.preventDefault();
+    if (!profileImageFile) return;
+    const formData = new FormData();
+    formData.append('profileImage', profileImageFile);
+    try {
+      const res = await axios.post('http://localhost:5000/api/profiles/upload-profile-image', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      alert('Profile image uploaded');
+      // Update user context with new profile image
+      const updatedUser = { ...user, profileImage: res.data.profileImage };
+      setUser(updatedUser);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
     } catch (error) {
       alert('Upload failed');
     }
@@ -215,7 +235,7 @@ const CandidateProfile = () => {
               </form>
             </motion.div>
 
-            {/* Resume Upload Section */}
+            {/* Resume and Profile Image Upload Section */}
             <motion.div
               initial={{ opacity: 0, x: 50 }}
               animate={{ opacity: 1, x: 0 }}
@@ -229,53 +249,87 @@ const CandidateProfile = () => {
                 className="text-3xl font-bold text-gray-900 mb-6 flex items-center space-x-2"
               >
                 <FaFileUpload className="text-green-500" />
-                <span>Resume Upload</span>
+                <span>Resume & Profile Image</span>
               </motion.h2>
-              <form onSubmit={uploadResume} className="space-y-6">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 1, duration: 0.4 }}
-                >
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Select Resume File</label>
-                  <input
-                    type="file"
-                    accept=".pdf,.doc,.docx"
-                    onChange={(e) => setFile(e.target.files[0])}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-200 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100"
-                  />
-                </motion.div>
-                <motion.button
-                  initial={{ scale: 0.9, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ delay: 1.1, duration: 0.3 }}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  type="submit"
-                  className="w-full bg-gradient-to-r from-green-500 to-blue-600 text-white py-3 px-6 rounded-lg hover:from-green-600 hover:to-blue-700 transition duration-200 flex items-center justify-center space-x-2 shadow-lg"
-                >
-                  <FaFileUpload />
-                  <span>Upload Resume</span>
-                </motion.button>
-              </form>
-              {profile.resume_url && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 1.2, duration: 0.4 }}
-                  className="mt-6"
-                >
-                  <a
-                    href={`http://localhost:5000${profile.resume_url}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center space-x-2 bg-gradient-to-r from-purple-500 to-pink-600 text-white py-2 px-4 rounded-lg hover:from-purple-600 hover:to-pink-700 transition duration-200 shadow-lg"
+              <div className="space-y-6">
+                {/* Resume Upload */}
+                <form onSubmit={uploadResume} className="space-y-4">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 1, duration: 0.4 }}
                   >
-                    <FaEye />
-                    <span>View Resume</span>
-                  </a>
-                </motion.div>
-              )}
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Select Resume File</label>
+                    <input
+                      type="file"
+                      accept=".pdf,.doc,.docx"
+                      onChange={(e) => setFile(e.target.files[0])}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-200 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100"
+                    />
+                  </motion.div>
+                  <motion.button
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 1.1, duration: 0.3 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    type="submit"
+                    className="w-full bg-gradient-to-r from-green-500 to-blue-600 text-white py-3 px-6 rounded-lg hover:from-green-600 hover:to-blue-700 transition duration-200 flex items-center justify-center space-x-2 shadow-lg"
+                  >
+                    <FaFileUpload />
+                    <span>Upload Resume</span>
+                  </motion.button>
+                </form>
+                {profile.resume_url && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 1.2, duration: 0.4 }}
+                  >
+                    <a
+                      href={`http://localhost:5000${profile.resume_url}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center space-x-2 bg-gradient-to-r from-purple-500 to-pink-600 text-white py-2 px-4 rounded-lg hover:from-purple-600 hover:to-pink-700 transition duration-200 shadow-lg"
+                    >
+                      <FaEye />
+                      <span>View Resume</span>
+                    </a>
+                  </motion.div>
+                )}
+
+                {/* Profile Image Upload */}
+                <form onSubmit={uploadProfileImage} className="space-y-4">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 1.3, duration: 0.4 }}
+                  >
+                    <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center space-x-2">
+                      <FaCamera className="text-blue-500" />
+                      <span>Select Profile Image</span>
+                    </label>
+                    <input
+                      type="file"
+                      accept=".jpeg,.jpg,.png,.gif"
+                      onChange={(e) => setProfileImageFile(e.target.files[0])}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    />
+                  </motion.div>
+                  <motion.button
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 1.4, duration: 0.3 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    type="submit"
+                    className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 px-6 rounded-lg hover:from-blue-600 hover:to-purple-700 transition duration-200 flex items-center justify-center space-x-2 shadow-lg"
+                  >
+                    <FaCamera />
+                    <span>Upload Profile Image</span>
+                  </motion.button>
+                </form>
+              </div>
             </motion.div>
           </div>
         ) : (

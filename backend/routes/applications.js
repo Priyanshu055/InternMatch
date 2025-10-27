@@ -2,7 +2,38 @@ const express = require('express');
 const auth = require('../middleware/auth');
 const Application = require('../models/Application');
 const Internship = require('../models/Internship');
+const multer = require('multer');
+const path = require('path');
 const router = express.Router();
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/');
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = /pdf|doc|docx/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+
+    if (mimetype && extname) {
+      return cb(null, true);
+    } else {
+      cb(new Error('Only PDF, DOC, and DOCX files are allowed!'));
+    }
+  }
+});
 
 // Get applications for candidate
 router.get('/candidate', auth, async (req, res) => {
@@ -35,27 +66,35 @@ router.get('/employer', auth, async (req, res) => {
 });
 
 // Apply for internship
-router.post('/', auth, async (req, res) => {
+router.post('/', auth, upload.single('resume'), async (req, res) => {
   try {
     if (req.user.role !== 'Candidate') {
       return res.status(403).json({ message: 'Access denied' });
     }
     const { internship_id, cover_letter, resume_url, additional_info } = req.body;
-    const existingApplication = await Application.findOne({ candidate_id: req.user.userId, internship_id });
-    if (existingApplication) {
-      return res.status(400).json({ message: 'Already applied' });
+
+
+    let resumePath = resume_url; // Default to URL if provided
+    if (req.file) {
+      resumePath = req.file.path; // Use uploaded file path
     }
+
     const application = new Application({
       candidate_id: req.user.userId,
       internship_id,
       cover_letter,
-      resume_url,
+      resume_url: resumePath,
       additional_info,
     });
     await application.save();
     res.status(201).json(application);
   } catch (error) {
     console.error('Apply error:', error);
+    if (error instanceof multer.MulterError) {
+      if (error.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ message: 'File too large. Maximum size is 5MB.' });
+      }
+    }
     res.status(500).json({ message: 'Server error' });
   }
 });

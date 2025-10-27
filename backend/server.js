@@ -38,6 +38,9 @@ app.use('/api/applications', applicationRoutes);
 const profileRoutes = require('./routes/profiles');
 app.use('/api/profiles', profileRoutes);
 
+const messageRoutes = require('./routes/messages');
+app.use('/api/messages', messageRoutes);
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

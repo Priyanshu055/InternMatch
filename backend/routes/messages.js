@@ -53,7 +53,12 @@ router.get('/candidate', auth, async (req, res) => {
     if (req.user.role !== 'Candidate') {
       return res.status(403).json({ message: 'Access denied' });
     }
-    const messages = await Message.find({ receiver_id: req.user.userId })
+    const messages = await Message.find({
+      $or: [
+        { sender_id: req.user.userId },
+        { receiver_id: req.user.userId }
+      ]
+    })
       .populate('sender_id', 'name')
       .populate('receiver_id', 'name')
       .populate({
@@ -74,7 +79,12 @@ router.get('/employer', auth, async (req, res) => {
     if (req.user.role !== 'Employer') {
       return res.status(403).json({ message: 'Access denied' });
     }
-    const messages = await Message.find({ receiver_id: req.user.userId })
+    const messages = await Message.find({
+      $or: [
+        { sender_id: req.user.userId },
+        { receiver_id: req.user.userId }
+      ]
+    })
       .populate('sender_id', 'name')
       .populate('receiver_id', 'name')
       .populate({

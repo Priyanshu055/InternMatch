@@ -110,14 +110,13 @@ const Dashboard = () => {
     ]);
   };
 
-  const applyForInternship = async (internshipId) => {
-    try {
-      await axios.post('http://localhost:5000/api/applications', { internship_id: internshipId });
-      alert('Applied successfully');
-      fetchApplications();
-    } catch (error) {
-      alert('Application failed');
-    }
+  const applyForInternship = (internship) => {
+    setSelectedInternship(internship);
+    setApplyModalOpen(true);
+  };
+
+  const handleApplySuccess = () => {
+    fetchApplications();
   };
 
   const saveInternship = async (internshipId) => {
@@ -407,7 +406,7 @@ const Dashboard = () => {
                           <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            onClick={() => applyForInternship(internship._id)}
+                            onClick={() => applyForInternship(internship)}
                             className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-2 rounded-lg hover:from-blue-600 hover:to-purple-700 transition duration-200 flex items-center justify-center space-x-2 shadow-lg"
                           >
                             <FaPaperPlane />
@@ -476,7 +475,7 @@ const Dashboard = () => {
                           <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            onClick={() => applyForInternship(internship._id)}
+                            onClick={() => applyForInternship(internship)}
                             className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-2 rounded-lg hover:from-blue-600 hover:to-purple-700 transition duration-200 flex items-center justify-center space-x-2 shadow-lg"
                           >
                             <FaPaperPlane />
@@ -485,6 +484,7 @@ const Dashboard = () => {
                           <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
+                            onClick={() => saveInternship(internship._id)}
                             className="p-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition duration-200"
                           >
                             <FaBookmark className="text-gray-600" />
@@ -578,7 +578,7 @@ const Dashboard = () => {
                             <motion.button
                               whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.95 }}
-                              onClick={() => applyForInternship(internship._id)}
+                              onClick={() => applyForInternship(internship)}
                               className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-2 rounded-lg hover:from-blue-600 hover:to-purple-700 transition duration-200 flex items-center justify-center space-x-2 shadow-lg"
                             >
                               <FaPaperPlane />

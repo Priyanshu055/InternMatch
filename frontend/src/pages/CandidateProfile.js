@@ -174,7 +174,7 @@ const CandidateProfile = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 1, duration: 0.4 }}
                 >
-                  <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center space-x-2">
+                  <label className="text-sm font-medium text-gray-700 mb-2 flex items-center space-x-2">
                     <FaBriefcase className="text-green-500" />
                     <span>Skills (comma separated)</span>
                   </label>
@@ -182,7 +182,7 @@ const CandidateProfile = () => {
                     type="text"
                     value={skillsInput}
                     onChange={(e) => setSkillsInput(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
+                    className="block w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
                     placeholder="e.g., JavaScript, React, Node.js"
                   />
                 </motion.div>
@@ -191,7 +191,7 @@ const CandidateProfile = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 1.1, duration: 0.4 }}
                 >
-                  <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center space-x-2">
+                  <label className="text-sm font-medium text-gray-700 mb-2 flex items-center space-x-2">
                     <FaGraduationCap className="text-purple-500" />
                     <span>Education</span>
                   </label>
@@ -208,7 +208,7 @@ const CandidateProfile = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 1.2, duration: 0.4 }}
                 >
-                  <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center space-x-2">
+                  <label className="text-sm font-medium text-gray-700 mb-2 flex items-center space-x-2">
                     <FaBriefcase className="text-orange-500" />
                     <span>Experience</span>
                   </label>
@@ -290,7 +290,7 @@ const CandidateProfile = () => {
                       href={`http://localhost:5000${profile.resume_url}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center space-x-2 bg-gradient-to-r from-purple-500 to-pink-600 text-white py-2 px-4 rounded-lg hover:from-purple-600 hover:to-pink-700 transition duration-200 shadow-lg"
+                      className="flex items-center space-x-2 bg-gradient-to-r from-purple-500 to-pink-600 text-white py-2 px-4 rounded-lg hover:from-purple-600 hover:to-pink-700 transition duration-200 shadow-lg"
                     >
                       <FaEye />
                       <span>View Resume</span>
@@ -305,7 +305,7 @@ const CandidateProfile = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 1.3, duration: 0.4 }}
                   >
-                    <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center space-x-2">
+                    <label className="text-sm font-medium text-gray-700 mb-2 flex items-center space-x-2">
                       <FaCamera className="text-blue-500" />
                       <span>Select Profile Image</span>
                     </label>
@@ -354,7 +354,7 @@ const CandidateProfile = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1, duration: 0.4 }}
               >
-                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center space-x-2">
+                <label className="text-sm font-medium text-gray-700 mb-2 flex items-center space-x-2">
                   <FaBuilding className="text-green-500" />
                   <span>Company Name</span>
                 </label>
@@ -371,7 +371,7 @@ const CandidateProfile = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1.1, duration: 0.4 }}
               >
-                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center space-x-2">
+                <label className="text-sm font-medium text-gray-700 mb-2 flex items-center space-x-2">
                   <FaIndustry className="text-purple-500" />
                   <span>Industry</span>
                 </label>
@@ -388,7 +388,7 @@ const CandidateProfile = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1.2, duration: 0.4 }}
               >
-                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center space-x-2">
+                <label className="text-sm font-medium text-gray-700 mb-2 flex items-center space-x-2">
                   <FaGlobe className="text-orange-500" />
                   <span>Website</span>
                 </label>
@@ -405,7 +405,7 @@ const CandidateProfile = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1.3, duration: 0.4 }}
               >
-                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center space-x-2">
+                <label className="text-sm font-medium text-gray-700 mb-2 flex items-center space-x-2">
                   <FaInfoCircle className="text-red-500" />
                   <span>Company Description</span>
                 </label>

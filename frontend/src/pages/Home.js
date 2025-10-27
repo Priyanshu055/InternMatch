@@ -182,7 +182,7 @@ const Home = () => {
             </p>
             <Link
               to="/register"
-              className="bg-white text-blue-600 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-gray-100 transition duration-200 inline-flex items-center space-x-2 group"
+              className="bg-white text-blue-600 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-gray-100 transition duration-200 flex items-center space-x-2 group"
             >
               <span>Create Your Account</span>
               <FaArrowRight className="group-hover:translate-x-1 transition duration-200" />

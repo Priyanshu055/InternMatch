@@ -36,6 +36,9 @@ const Dashboard = () => {
   const [messageText, setMessageText] = useState('');
   const [sendMessageModalOpen, setSendMessageModalOpen] = useState(false);
   const [selectedAppForMessage, setSelectedAppForMessage] = useState(null);
+  const [replyModalOpen, setReplyModalOpen] = useState(false);
+  const [selectedMessageForReply, setSelectedMessageForReply] = useState(null);
+  const [replyText, setReplyText] = useState('');
 
   useEffect(() => {
     if (user?.role === 'Candidate') {
@@ -726,21 +729,39 @@ const Dashboard = () => {
                     >
                       {messages.map((msg, index) => (
                         <motion.div
-                          key={msg.id}
+                          key={msg._id}
                           variants={itemVariants}
                           whileHover={{ scale: 1.02 }}
-                          className={`bg-white p-6 rounded-xl shadow-xl border border-gray-200 ${msg.unread ? 'border-l-4 border-l-blue-500' : ''}`}
+                          className={`bg-white p-6 rounded-xl shadow-xl border border-gray-200 ${!msg.is_read ? 'border-l-4 border-l-blue-500' : ''}`}
                         >
                           <div className="flex justify-between items-start mb-2">
-                            <h3 className="text-lg font-semibold text-gray-800">{msg.from}</h3>
-                            <span className="text-sm text-gray-500">{msg.date.toLocaleDateString()}</span>
+                            <h3 className="text-lg font-semibold text-gray-800">{msg.sender_id.name} - {msg.application_id.internship_id.title}</h3>
+                            <span className="text-sm text-gray-500">{new Date(msg.createdAt).toLocaleDateString()}</span>
                           </div>
                           <p className="text-gray-600 mb-4">{msg.message}</p>
-                          {msg.unread && (
-                            <span className="inline-block bg-blue-100 text-blue-600 text-xs font-medium px-2 py-1 rounded-full">
-                              Unread
-                            </span>
-                          )}
+                          <div className="flex space-x-2">
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => {
+                                setSelectedMessageForReply(msg);
+                                setReplyModalOpen(true);
+                              }}
+                              className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-200"
+                            >
+                              Reply
+                            </motion.button>
+                            {!msg.is_read && (
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => markMessageAsRead(msg._id)}
+                                className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition duration-200"
+                              >
+                                Mark as Read
+                              </motion.button>
+                            )}
+                          </div>
                         </motion.div>
                       ))}
                     </motion.div>
@@ -758,7 +779,7 @@ const Dashboard = () => {
                 >
                   <Link
                     to="/profile"
-                    className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-lg hover:from-blue-600 hover:to-purple-700 transition duration-200 flex items-center space-x-2 shadow-lg inline-flex"
+                    className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-lg hover:from-blue-600 hover:to-purple-700 transition duration-200 flex items-center space-x-2 shadow-lg"
                   >
                     <FaUser />
                     <span>Go to Profile Page</span>
@@ -920,7 +941,7 @@ const Dashboard = () => {
                 >
                   <Link
                     to="/post-internship"
-                    className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-lg hover:from-blue-600 hover:to-purple-700 transition duration-200 flex items-center space-x-2 shadow-lg inline-flex"
+                    className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-lg hover:from-blue-600 hover:to-purple-700 transition duration-200 flex items-center space-x-2 shadow-lg"
                   >
                     <FaBriefcase />
                     <span>Post a New Internship</span>
@@ -1156,7 +1177,7 @@ const Dashboard = () => {
                 >
                   <Link
                     to="/profile"
-                    className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-lg hover:from-blue-600 hover:to-purple-700 transition duration-200 flex items-center space-x-2 shadow-lg inline-flex"
+                    className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-lg hover:from-blue-600 hover:to-purple-700 transition duration-200 flex items-center space-x-2 shadow-lg"
                   >
                     <FaUser />
                     <span>Go to Profile Page</span>
@@ -1236,6 +1257,40 @@ const Dashboard = () => {
             >
               Close
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Reply Modal */}
+      {replyModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold mb-4">Reply to Message</h3>
+            <textarea
+              value={replyText}
+              onChange={(e) => setReplyText(e.target.value)}
+              placeholder="Type your reply here..."
+              className="w-full p-2 border border-gray-300 rounded-lg mb-4"
+              rows="4"
+            ></textarea>
+            <div className="flex space-x-2">
+              <button
+                onClick={() => {
+                  sendMessage(selectedMessageForReply.application_id._id, replyText);
+                  setReplyModalOpen(false);
+                  setReplyText('');
+                }}
+                className="flex-1 bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600"
+              >
+                Send Reply
+              </button>
+              <button
+                onClick={() => { setReplyModalOpen(false); setReplyText(''); }}
+                className="flex-1 bg-gray-500 text-white py-2 rounded-lg hover:bg-gray-600"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}

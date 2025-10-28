@@ -168,52 +168,18 @@ router.get('/saved', auth, async (req, res) => {
       return res.status(403).json({ message: 'Access denied' });
     }
     console.log('Fetching saved internships for user:', req.user.userId);
-    const savedInternships = await SavedInternship.aggregate([
-      { $match: { user_id: req.user.userId } },
-      {
-        $lookup: {
-          from: 'internships',
-          localField: 'internship_id',
-          foreignField: '_id',
-          as: 'internship'
-        }
-      },
-      { $unwind: '$internship' },
-      {
-        $lookup: {
-          from: 'users',
-          localField: 'internship.company_id',
-          foreignField: '_id',
-          as: 'company'
-        }
-      },
-      { $unwind: { path: '$company', preserveNullAndEmptyArrays: true } },
-      {
-        $project: {
-          _id: '$internship._id',
-          title: '$internship.title',
-          description: '$internship.description',
-          required_skills: '$internship.required_skills',
-          location: '$internship.location',
-          stipend: '$internship.stipend',
-          duration: '$internship.duration',
-          applicationDeadline: '$internship.applicationDeadline',
-          posted_date: '$internship.posted_date',
-          createdAt: '$internship.createdAt',
-          updatedAt: '$internship.updatedAt',
-          company_id: {
-            _id: '$company._id',
-            name: '$company.name',
-            profileImage: '$company.profileImage'
-          }
-        }
-      }
-    ]);
-    console.log('Saved internships found:', savedInternships.length);
-    res.json(savedInternships);
+    const savedInternships = await SavedInternship.find({ user_id: req.user.userId }).populate({
+      path: 'internship_id',
+      populate: { path: 'company_id', select: 'name profileImage' }
+    });
+    console.log('Saved internships raw:', savedInternships);
+    const internships = savedInternships.map(save => save.internship_id).filter(internship => internship !== null);
+    console.log('Saved internships found:', internships.length);
+    res.json(internships);
   } catch (error) {
-    console.error('Get saved internships error:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Get saved internships error:', error.message);
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ message: 'Server error', details: error.message });
   }
 });
 
@@ -233,6 +199,34 @@ router.delete('/saved/:internshipId', auth, async (req, res) => {
     res.json({ message: 'Unsaved successfully' });
   } catch (error) {
     console.error('Unsave internship error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Add these routes after existing routes
+router.post('/save/:id', auth, async (req, res) => {
+  try {
+    const saved = new SavedInternship({
+      user_id: req.user.id,
+      internship_id: req.params.id
+    });
+    await saved.save();
+    res.json({ message: 'Internship saved successfully' });
+  } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({ message: 'Internship already saved' });
+    }
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.get('/saved', auth, async (req, res) => {
+  try {
+    const savedInternships = await SavedInternship.find({ user_id: req.user.id })
+      .populate('internship_id')
+      .sort('-savedAt');
+    res.json(savedInternships);
+  } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }
 });

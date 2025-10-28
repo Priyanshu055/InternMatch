@@ -9,6 +9,7 @@ import Dashboard from './pages/Dashboard';
 import CandidateProfile from './pages/CandidateProfile';
 import PostInternship from './pages/PostInternship';
 import EditInternship from './pages/EditInternship';
+import SavedInternships from './components/SavedInternships';
 
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useContext(AuthContext);
@@ -45,6 +46,11 @@ function App() {
           <Route path="/edit-internship/:id" element={
             <PrivateRoute>
               <EditInternship />
+            </PrivateRoute>
+          } />
+          <Route path="/saved-internships" element={
+            <PrivateRoute>
+              <SavedInternships />
             </PrivateRoute>
           } />
           <Route path="*" element={<Navigate to="/" />} />

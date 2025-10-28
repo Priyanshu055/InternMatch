@@ -2,9 +2,13 @@ const OpenAI = require('openai');
 const Sentiment = require('sentiment');
 
 const sentiment = new Sentiment();
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY, // Ensure this is set in your .env file
-});
+let openai = null;
+
+if (process.env.OPENAI_API_KEY) {
+  openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
+}
 
 /**
  * Analyzes a cover letter using sentiment analysis and AI-generated feedback.

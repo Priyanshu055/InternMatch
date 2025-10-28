@@ -167,7 +167,7 @@ router.get('/saved', auth, async (req, res) => {
     if (req.user.role !== 'Candidate') {
       return res.status(403).json({ message: 'Access denied' });
     }
-    const savedInternships = await SavedInternship.find({ user_id: req.user.userId }).populate('internship_id').populate({
+    const savedInternships = await SavedInternship.find({ user_id: req.user.userId }).populate({
       path: 'internship_id',
       populate: { path: 'company_id', select: 'name profileImage' }
     });

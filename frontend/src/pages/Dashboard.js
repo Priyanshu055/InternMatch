@@ -18,6 +18,7 @@ const Dashboard = () => {
   const [filterLocation, setFilterLocation] = useState('');
   const [savedInternships, setSavedInternships] = useState([]);
   const [savedInternshipIds, setSavedInternshipIds] = useState(new Set());
+  const [appliedInternshipIds, setAppliedInternshipIds] = useState(new Set());
   const [employerInternships, setEmployerInternships] = useState([]);
   const [messages, setMessages] = useState([]);
   const [loadingInternships, setLoadingInternships] = useState(false);
@@ -50,6 +51,7 @@ const Dashboard = () => {
     } else if (user?.role === 'Employer') {
       fetchEmployerApplications();
       fetchEmployerInternships();
+      fetchMessages();
       localStorage.removeItem('refreshInternships');
     }
   }, [user]);
@@ -57,6 +59,10 @@ const Dashboard = () => {
   useEffect(() => {
     setSavedInternshipIds(new Set(savedInternships.map(save => save._id)));
   }, [savedInternships]);
+
+  useEffect(() => {
+    setAppliedInternshipIds(new Set(applications.map(app => app.internship_id._id)));
+  }, [applications]);
 
   const fetchRecommendedInternships = useCallback(async () => {
     try {
@@ -472,15 +478,24 @@ const Dashboard = () => {
                               {internship.matchScore}% Match
                             </span>
                           </div>
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => applyForInternship(internship)}
-                            className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-2 rounded-lg hover:from-blue-600 hover:to-purple-700 transition duration-200 flex items-center justify-center space-x-2 shadow-lg"
-                          >
-                            <FaPaperPlane />
-                            <span>Apply</span>
-                          </motion.button>
+                          {appliedInternshipIds.has(internship._id) ? (
+                            <motion.button
+                              className="w-full bg-gray-400 text-white py-2 rounded-lg cursor-not-allowed flex items-center justify-center space-x-2 shadow-lg"
+                            >
+                              <FaCheck />
+                              <span>Applied</span>
+                            </motion.button>
+                          ) : (
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => applyForInternship(internship)}
+                              className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-2 rounded-lg hover:from-blue-600 hover:to-purple-700 transition duration-200 flex items-center justify-center space-x-2 shadow-lg"
+                            >
+                              <FaPaperPlane />
+                              <span>Apply</span>
+                            </motion.button>
+                          )}
                         </motion.div>
                       ))}
                     </motion.div>
@@ -550,15 +565,24 @@ const Dashboard = () => {
                           </div>
                         </div>
                           <div className="flex space-x-2">
-                            <motion.button
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              onClick={() => applyForInternship(internship)}
-                              className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-2 rounded-lg hover:from-blue-600 hover:to-purple-700 transition duration-200 flex items-center justify-center space-x-2 shadow-lg"
-                            >
-                              <FaPaperPlane />
-                              <span>Apply</span>
-                            </motion.button>
+                            {appliedInternshipIds.has(internship._id) ? (
+                              <motion.button
+                                className="flex-1 bg-gray-400 text-white py-2 rounded-lg cursor-not-allowed flex items-center justify-center space-x-2 shadow-lg"
+                              >
+                                <FaCheck />
+                                <span>Applied</span>
+                              </motion.button>
+                            ) : (
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => applyForInternship(internship)}
+                                className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-2 rounded-lg hover:from-blue-600 hover:to-purple-700 transition duration-200 flex items-center justify-center space-x-2 shadow-lg"
+                              >
+                                <FaPaperPlane />
+                                <span>Apply</span>
+                              </motion.button>
+                            )}
                             {savedInternshipIds.has(internship._id) ? (
                               <motion.button
                                 whileHover={{ scale: 1.05 }}
@@ -1074,6 +1098,17 @@ const Dashboard = () => {
                             >
                               Reject
                             </motion.button>
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => {
+                                setSelectedAppForMessage(app);
+                                setSendMessageModalOpen(true);
+                              }}
+                              className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-200"
+                            >
+                              Send Message
+                            </motion.button>
                           </div>
                         </motion.div>
                       ))}
@@ -1144,8 +1179,19 @@ const Dashboard = () => {
                             <motion.button
                               whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.95 }}
-                              onClick={() => fetchCandidateProfile(msg.application_id._id)}
+                              onClick={() => {
+                                setSelectedMessageForReply(msg);
+                                setReplyModalOpen(true);
+                              }}
                               className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-200"
+                            >
+                              Reply
+                            </motion.button>
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => fetchCandidateProfile(msg.application_id._id)}
+                              className="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition duration-200"
                             >
                               View Profile
                             </motion.button>
@@ -1247,7 +1293,12 @@ const Dashboard = () => {
               </div>
               {candidateProfile.profile.resume_url && (
                 <div>
-                  <a href={`http://localhost:5000/${candidateProfile.profile.resume_url}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">View Resume</a>
+                  <button
+                    onClick={() => window.open(`http://localhost:5000/${candidateProfile.profile.resume_url}`, '_blank')}
+                    className="text-blue-600 hover:text-blue-800 cursor-pointer"
+                  >
+                    View Resume
+                  </button>
                 </div>
               )}
             </div>

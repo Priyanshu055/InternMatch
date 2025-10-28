@@ -18,6 +18,7 @@ const Dashboard = () => {
   const [filterLocation, setFilterLocation] = useState('');
   const [savedInternships, setSavedInternships] = useState([]);
   const [savedInternshipIds, setSavedInternshipIds] = useState(new Set());
+  const [appliedInternshipIds, setAppliedInternshipIds] = useState(new Set());
   const [employerInternships, setEmployerInternships] = useState([]);
   const [messages, setMessages] = useState([]);
   const [loadingInternships, setLoadingInternships] = useState(false);
@@ -57,6 +58,10 @@ const Dashboard = () => {
   useEffect(() => {
     setSavedInternshipIds(new Set(savedInternships.map(save => save._id)));
   }, [savedInternships]);
+
+  useEffect(() => {
+    setAppliedInternshipIds(new Set(applications.map(app => app.internship_id._id)));
+  }, [applications]);
 
   const fetchRecommendedInternships = useCallback(async () => {
     try {
@@ -472,15 +477,25 @@ const Dashboard = () => {
                               {internship.matchScore}% Match
                             </span>
                           </div>
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => applyForInternship(internship)}
-                            className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-2 rounded-lg hover:from-blue-600 hover:to-purple-700 transition duration-200 flex items-center justify-center space-x-2 shadow-lg"
-                          >
-                            <FaPaperPlane />
-                            <span>Apply</span>
-                          </motion.button>
+                          {appliedInternshipIds.has(internship._id) ? (
+                            <motion.button
+                              disabled
+                              className="w-full bg-gray-400 text-white py-2 rounded-lg cursor-not-allowed flex items-center justify-center space-x-2 shadow-lg"
+                            >
+                              <FaCheck />
+                              <span>Applied</span>
+                            </motion.button>
+                          ) : (
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => applyForInternship(internship)}
+                              className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-2 rounded-lg hover:from-blue-600 hover:to-purple-700 transition duration-200 flex items-center justify-center space-x-2 shadow-lg"
+                            >
+                              <FaPaperPlane />
+                              <span>Apply</span>
+                            </motion.button>
+                          )}
                         </motion.div>
                       ))}
                     </motion.div>
@@ -550,15 +565,25 @@ const Dashboard = () => {
                           </div>
                         </div>
                           <div className="flex space-x-2">
-                            <motion.button
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              onClick={() => applyForInternship(internship)}
-                              className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-2 rounded-lg hover:from-blue-600 hover:to-purple-700 transition duration-200 flex items-center justify-center space-x-2 shadow-lg"
-                            >
-                              <FaPaperPlane />
-                              <span>Apply</span>
-                            </motion.button>
+                            {appliedInternshipIds.has(internship._id) ? (
+                              <motion.button
+                                disabled
+                                className="flex-1 bg-gray-400 text-white py-2 rounded-lg cursor-not-allowed flex items-center justify-center space-x-2 shadow-lg"
+                              >
+                                <FaCheck />
+                                <span>Applied</span>
+                              </motion.button>
+                            ) : (
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => applyForInternship(internship)}
+                                className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-2 rounded-lg hover:from-blue-600 hover:to-purple-700 transition duration-200 flex items-center justify-center space-x-2 shadow-lg"
+                              >
+                                <FaPaperPlane />
+                                <span>Apply</span>
+                              </motion.button>
+                            )}
                             {savedInternshipIds.has(internship._id) ? (
                               <motion.button
                                 whileHover={{ scale: 1.05 }}

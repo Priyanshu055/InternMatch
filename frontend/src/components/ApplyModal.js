@@ -149,15 +149,15 @@ const ApplyModal = ({ internship, onClose, onApply }) => {
                 <h3 className="font-semibold text-blue-900">AI Review</h3>
               </div>
               <div className="space-y-2 text-sm">
-                <p><strong>Enthusiasm:</strong> {reviewResult.analysis.enthusiasmLevel}</p>
-                {reviewResult.analysis.redFlags.length > 0 && (
+                <p><strong>Enthusiasm:</strong> {reviewResult.enthusiasmLevel}</p>
+                {reviewResult.redFlags.length > 0 && (
                   <div>
                     <p className="flex items-center space-x-1 text-red-600">
                       <FaExclamationTriangle />
                       <strong>Potential Issues:</strong>
                     </p>
                     <ul className="list-disc list-inside ml-4 text-red-600">
-                      {reviewResult.analysis.redFlags.map((flag, index) => (
+                      {reviewResult.redFlags.map((flag, index) => (
                         <li key={index}>{flag}</li>
                       ))}
                     </ul>
@@ -168,7 +168,7 @@ const ApplyModal = ({ internship, onClose, onApply }) => {
                     <FaCheckCircle />
                     <strong>Suggestions:</strong>
                   </p>
-                  <p className="ml-4 text-gray-700">{reviewResult.analysis.aiFeedback}</p>
+                  <p className="ml-4 text-gray-700">{reviewResult.aiFeedback}</p>
                 </div>
               </div>
             </motion.div>

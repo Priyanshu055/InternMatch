@@ -152,15 +152,9 @@ router.post('/review', auth, async (req, res) => {
     }
 
     // Analyze the application
-    const analysis = await analyzeApplication(cover_letter, internship.company_id.name, internship.title);
+    const analysis = await analyzeApplication(cover_letter, internship.company_id.name || 'the company', internship.title);
 
-    res.json({
-      analysis,
-      internship: {
-        title: internship.title,
-        company_name: internship.company_name,
-      }
-    });
+    res.json(analysis);
   } catch (error) {
     console.error('Review application error:', error);
     res.status(500).json({ message: 'Server error during review' });

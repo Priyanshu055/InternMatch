@@ -10,8 +10,8 @@ Integrate AI-driven review of internship applications using sentiment analysis a
 - [x] Create review utility function for analyzing cover letters
 - [x] Add /review endpoint in backend/routes/applications.js
 - [x] Update frontend ApplyModal.js to include review step before submission
-- [ ] Test the review functionality end-to-end
-- [ ] Set up OpenAI API key in environment variables
+- [x] Test the review functionality end-to-end
+- [x] Set up OpenAI API key in environment variables
 
 ## Dependencies
 

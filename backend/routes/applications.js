@@ -2,6 +2,7 @@ const express = require('express');
 const auth = require('../middleware/auth');
 const Application = require('../models/Application');
 const Internship = require('../models/Internship');
+const { analyzeApplication } = require('../utils/review');
 const multer = require('multer');
 const path = require('path');
 const router = express.Router();
@@ -128,6 +129,41 @@ router.put('/:id', auth, async (req, res) => {
   } catch (error) {
     console.error('Update application error:', error);
     res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Review application before submission
+router.post('/review', auth, async (req, res) => {
+  try {
+    if (req.user.role !== 'Candidate') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    const { cover_letter, internship_id } = req.body;
+
+    if (!cover_letter || !internship_id) {
+      return res.status(400).json({ message: 'Cover letter and internship ID are required' });
+    }
+
+    // Fetch internship details for company name and job title
+    const internship = await Internship.findById(internship_id).populate('company_id', 'name');
+    if (!internship) {
+      return res.status(404).json({ message: 'Internship not found' });
+    }
+
+    // Analyze the application
+    const analysis = await analyzeApplication(cover_letter, internship.company_id.name, internship.title);
+
+    res.json({
+      analysis,
+      internship: {
+        title: internship.title,
+        company_name: internship.company_name,
+      }
+    });
+  } catch (error) {
+    console.error('Review application error:', error);
+    res.status(500).json({ message: 'Server error during review' });
   }
 });
 

@@ -1,6 +1,6 @@
 import React, { useState, useContext } from 'react';
 import { motion } from 'framer-motion';
-import { FaTimes, FaPaperPlane, FaFileUpload } from 'react-icons/fa';
+import { FaTimes, FaPaperPlane, FaFileUpload, FaRobot, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
 import AuthContext from '../context/AuthContext';
 import axios from 'axios';
 
@@ -13,6 +13,9 @@ const ApplyModal = ({ internship, onClose, onApply }) => {
   });
   const [resumeFile, setResumeFile] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [reviewLoading, setReviewLoading] = useState(false);
+  const [reviewResult, setReviewResult] = useState(null);
+  const [showReview, setShowReview] = useState(false);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -20,6 +23,32 @@ const ApplyModal = ({ internship, onClose, onApply }) => {
 
   const handleFileChange = (e) => {
     setResumeFile(e.target.files[0]);
+  };
+
+  const handleReview = async () => {
+    if (!formData.cover_letter.trim()) {
+      alert('Please enter a cover letter before reviewing.');
+      return;
+    }
+    setReviewLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post('http://localhost:5000/api/applications/review', {
+        cover_letter: formData.cover_letter,
+        internship_id: internship._id,
+      }, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      setReviewResult(response.data);
+      setShowReview(true);
+    } catch (error) {
+      console.error('Review error:', error);
+      alert('Failed to review application. Please try again.');
+    } finally {
+      setReviewLoading(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -98,7 +127,52 @@ const ApplyModal = ({ internship, onClose, onApply }) => {
               placeholder="Tell us why you're interested in this internship..."
               required
             />
+            <button
+              type="button"
+              onClick={handleReview}
+              disabled={reviewLoading}
+              className="mt-2 flex items-center space-x-2 text-blue-600 hover:text-blue-800 text-sm font-medium disabled:opacity-50"
+            >
+              <FaRobot />
+              <span>{reviewLoading ? 'Analyzing...' : 'Get AI Review'}</span>
+            </button>
           </div>
+
+          {showReview && reviewResult && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-blue-50 border border-blue-200 rounded-lg p-4"
+            >
+              <div className="flex items-center space-x-2 mb-2">
+                <FaRobot className="text-blue-600" />
+                <h3 className="font-semibold text-blue-900">AI Review</h3>
+              </div>
+              <div className="space-y-2 text-sm">
+                <p><strong>Enthusiasm:</strong> {reviewResult.analysis.enthusiasmLevel}</p>
+                {reviewResult.analysis.redFlags.length > 0 && (
+                  <div>
+                    <p className="flex items-center space-x-1 text-red-600">
+                      <FaExclamationTriangle />
+                      <strong>Potential Issues:</strong>
+                    </p>
+                    <ul className="list-disc list-inside ml-4 text-red-600">
+                      {reviewResult.analysis.redFlags.map((flag, index) => (
+                        <li key={index}>{flag}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                <div>
+                  <p className="flex items-center space-x-1 text-green-600">
+                    <FaCheckCircle />
+                    <strong>Suggestions:</strong>
+                  </p>
+                  <p className="ml-4 text-gray-700">{reviewResult.analysis.aiFeedback}</p>
+                </div>
+              </div>
+            </motion.div>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Resume (Optional)</label>

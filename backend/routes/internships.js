@@ -1,4 +1,5 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const auth = require('../middleware/auth');
 const Internship = require('../models/Internship');
 const CandidateProfile = require('../models/CandidateProfile');
@@ -170,16 +171,18 @@ router.get('/saved', auth, async (req, res) => {
     console.log('Fetching saved internships for user:', req.user.userId);
     const savedInternships = await SavedInternship.find({ user_id: req.user.userId }).populate({
       path: 'internship_id',
-      populate: { path: 'company_id', select: 'name profileImage' }
+      model: 'Internship',
+      populate: {
+        path: 'company_id',
+        model: 'User',
+        select: 'name profileImage'
+      }
     });
-    console.log('Saved internships raw:', savedInternships);
-    const internships = savedInternships.map(save => save.internship_id).filter(internship => internship !== null);
-    console.log('Saved internships found:', internships.length);
-    res.json(internships);
+    console.log('Saved internships found:', savedInternships.length);
+    res.json(savedInternships);
   } catch (error) {
-    console.error('Get saved internships error:', error.message);
-    console.error('Error stack:', error.stack);
-    res.status(500).json({ message: 'Server error', details: error.message });
+    console.error('Get saved internships error:', error);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -203,32 +206,6 @@ router.delete('/saved/:internshipId', auth, async (req, res) => {
   }
 });
 
-// Add these routes after existing routes
-router.post('/save/:id', auth, async (req, res) => {
-  try {
-    const saved = new SavedInternship({
-      user_id: req.user.id,
-      internship_id: req.params.id
-    });
-    await saved.save();
-    res.json({ message: 'Internship saved successfully' });
-  } catch (error) {
-    if (error.code === 11000) {
-      return res.status(400).json({ message: 'Internship already saved' });
-    }
-    res.status(500).json({ message: 'Server error' });
-  }
-});
 
-router.get('/saved', auth, async (req, res) => {
-  try {
-    const savedInternships = await SavedInternship.find({ user_id: req.user.id })
-      .populate('internship_id')
-      .sort('-savedAt');
-    res.json(savedInternships);
-  } catch (error) {
-    res.status(500).json({ message: 'Server error' });
-  }
-});
 
 module.exports = router;

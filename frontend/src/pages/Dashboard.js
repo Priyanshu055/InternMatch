@@ -30,8 +30,7 @@ const Dashboard = () => {
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [applyModalOpen, setApplyModalOpen] = useState(false);
   const [selectedInternship, setSelectedInternship] = useState(null);
-  const [selectedApplication, setSelectedApplication] = useState(null);
-  const [messageModalOpen, setMessageModalOpen] = useState(false);
+
   const [candidateProfile, setCandidateProfile] = useState(null);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [messageText, setMessageText] = useState('');
@@ -684,27 +683,27 @@ const Dashboard = () => {
                       animate="visible"
                       className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
                     >
-                      {savedInternships.map((internship, index) => (
+                      {savedInternships.map((saved, index) => (
                         <motion.div
-                          key={internship._id}
+                          key={saved._id}
                           variants={itemVariants}
                           whileHover={{ scale: 1.05, y: -5 }}
                           className="bg-white p-6 rounded-xl shadow-xl border border-gray-200"
                         >
-                          <h3 className="text-xl font-semibold mb-2 text-gray-800">{internship.title}</h3>
-                          <p className="text-gray-600 mb-4">{internship.description.substring(0, 100)}...</p>
+                          <h3 className="text-xl font-semibold mb-2 text-gray-800">{saved.internship_id.title}</h3>
+                          <p className="text-gray-600 mb-4">{saved.internship_id.description.substring(0, 100)}...</p>
                           <div className="flex items-center justify-between mb-4">
-                            <span className="text-sm text-gray-500">{internship.location}</span>
+                            <span className="text-sm text-gray-500">{saved.internship_id.location}</span>
                             <div className="flex items-center space-x-2">
-                              {internship.company_id.profileImage && (
+                              {saved.internship_id.company_id.profileImage && (
                                 <img
-                                  src={`http://localhost:5000${internship.company_id.profileImage}`}
-                                  alt={`${internship.company_id.name} profile`}
+                                  src={`http://localhost:5000${saved.internship_id.company_id.profileImage}`}
+                                  alt={`${saved.internship_id.company_id.name} profile`}
                                   className="w-6 h-6 rounded-full object-cover"
                                 />
                               )}
                               <span className="text-sm font-medium text-blue-600 bg-blue-100 px-2 py-1 rounded-full">
-                                {internship.company_id.name}
+                                {saved.internship_id.company_id.name}
                               </span>
                             </div>
                           </div>
@@ -712,7 +711,7 @@ const Dashboard = () => {
                             <motion.button
                               whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.95 }}
-                              onClick={() => applyForInternship(internship)}
+                              onClick={() => applyForInternship(saved.internship_id)}
                               className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-2 rounded-lg hover:from-blue-600 hover:to-purple-700 transition duration-200 flex items-center justify-center space-x-2 shadow-lg"
                             >
                               <FaPaperPlane />
@@ -721,7 +720,7 @@ const Dashboard = () => {
                             <motion.button
                               whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.95 }}
-                              onClick={() => unsaveInternship(internship._id)}
+                              onClick={() => unsaveInternship(saved.internship_id._id)}
                               className="p-2 bg-red-100 rounded-lg hover:bg-red-200 transition duration-200"
                             >
                               <FaTimes className="text-red-600" />

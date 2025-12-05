@@ -1,11 +1,9 @@
-import React, { useState, useContext } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FaTimes, FaPaperPlane, FaFileUpload } from 'react-icons/fa';
-import AuthContext from '../context/AuthContext';
+import { FaTimes, FaPaperPlane } from 'react-icons/fa';
 import axios from 'axios';
 
 const ApplyModal = ({ internship, onClose, onApply }) => {
-  const { user } = useContext(AuthContext);
   const [formData, setFormData] = useState({
     cover_letter: '',
     resume_url: '',
@@ -44,7 +42,6 @@ const ApplyModal = ({ internship, onClose, onApply }) => {
 
       await axios.post('http://localhost:5000/api/applications', formDataToSend, {
         headers: {
-          'Content-Type': 'multipart/form-data',
           'Authorization': `Bearer ${token}`,
         },
       });

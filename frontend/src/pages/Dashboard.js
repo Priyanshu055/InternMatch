@@ -1,7 +1,29 @@
 import React, { useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FaSignOutAlt, FaUser, FaBriefcase, FaPaperPlane, FaCheck, FaTimes, FaPercentage, FaRocket, FaUsers, FaSearch, FaFilter, FaBookmark, FaBell, FaChartBar, FaEnvelope, FaGraduationCap, FaHome, FaList, FaStar, FaCog, FaFileUpload } from 'react-icons/fa';
+import {
+  FaSignOutAlt,
+  FaUser,
+  FaBriefcase,
+  FaPaperPlane,
+  FaCheck,
+  FaTimes,
+  FaPercentage,
+  FaRocket,
+  FaUsers,
+  FaSearch,
+  FaFilter,
+  FaBookmark,
+  FaBell,
+  FaChartBar,
+  FaEnvelope,
+  FaGraduationCap,
+  FaHome,
+  FaList,
+  FaStar,
+  FaCog,
+  FaFileUpload,
+} from 'react-icons/fa';
 import AuthContext from '../context/AuthContext';
 import ApplyModal from '../components/ApplyModal';
 import axios from 'axios';
@@ -10,6 +32,7 @@ const Dashboard = () => {
   const { user, logout } = useContext(AuthContext);
   const location = useLocation();
   const navigate = useNavigate();
+
   const [activeTab, setActiveTab] = useState('overview');
   const [internships, setInternships] = useState([]);
   const [allInternships, setAllInternships] = useState([]);
@@ -28,8 +51,10 @@ const Dashboard = () => {
   const [loadingEmployerApplications, setLoadingEmployerApplications] = useState(false);
   const [loadingEmployerInternships, setLoadingEmployerInternships] = useState(false);
   const [loadingMessages, setLoadingMessages] = useState(false);
+
   const [applyModalOpen, setApplyModalOpen] = useState(false);
   const [selectedInternship, setSelectedInternship] = useState(null);
+
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [messageModalOpen, setMessageModalOpen] = useState(false);
   const [candidateProfile, setCandidateProfile] = useState(null);
@@ -57,11 +82,19 @@ const Dashboard = () => {
   }, [user]);
 
   useEffect(() => {
-    setSavedInternshipIds(new Set(savedInternships.map(save => save._id)));
+    setSavedInternshipIds(
+      new Set(savedInternships.filter((save) => save && save._id).map((save) => save._id))
+    );
   }, [savedInternships]);
 
   useEffect(() => {
-    setAppliedInternshipIds(new Set(applications.map(app => app.internship_id._id)));
+    setAppliedInternshipIds(
+      new Set(
+        applications
+          .filter((app) => app && app.internship_id && app.internship_id._id)
+          .map((app) => app.internship_id._id)
+      )
+    );
   }, [applications]);
 
   const fetchRecommendedInternships = useCallback(async () => {
@@ -83,11 +116,14 @@ const Dashboard = () => {
   }, []);
 
   const fetchApplications = useCallback(async () => {
+    setLoadingApplications(true);
     try {
       const res = await axios.get('http://localhost:5000/api/applications/candidate');
       setApplications(res.data);
     } catch (error) {
       console.error('Error fetching applications:', error);
+    } finally {
+      setLoadingApplications(false);
     }
   }, []);
 
@@ -116,30 +152,39 @@ const Dashboard = () => {
   }, []);
 
   const fetchSavedInternships = useCallback(async () => {
+    setLoadingSavedInternships(true);
     try {
       const res = await axios.get('http://localhost:5000/api/internships/saved');
       setSavedInternships(res.data);
     } catch (error) {
       console.error('Error fetching saved internships:', error);
+    } finally {
+      setLoadingSavedInternships(false);
     }
   }, []);
 
-  const fetchMessages = useCallback(async () => {
-    setLoadingMessages(true);
-    try {
-      const endpoint = user.role === 'Candidate' ? 'candidate' : 'employer';
-      const res = await axios.get(`http://localhost:5000/api/messages/${endpoint}`);
-      setMessages(res.data);
-    } catch (error) {
-      console.error('Error fetching messages:', error);
-    } finally {
-      setLoadingMessages(false);
-    }
-  }, [user]);
+  const fetchMessages = useCallback(
+    async () => {
+      setLoadingMessages(true);
+      try {
+        const endpoint = user.role === 'Candidate' ? 'candidate' : 'employer';
+        const res = await axios.get(`http://localhost:5000/api/messages/${endpoint}`);
+        setMessages(res.data);
+      } catch (error) {
+        console.error('Error fetching messages:', error);
+      } finally {
+        setLoadingMessages(false);
+      }
+    },
+    [user]
+  );
 
   const sendMessage = async (applicationId, message) => {
     try {
-      await axios.post('http://localhost:5000/api/messages', { application_id: applicationId, message });
+      await axios.post('http://localhost:5000/api/messages', {
+        application_id: applicationId,
+        message,
+      });
       alert('Message sent successfully');
       fetchMessages();
     } catch (error) {
@@ -149,7 +194,9 @@ const Dashboard = () => {
 
   const fetchCandidateProfile = async (applicationId) => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/messages/candidate-profile/${applicationId}`);
+      const res = await axios.get(
+        `http://localhost:5000/api/messages/candidate-profile/${applicationId}`
+      );
       setCandidateProfile(res.data);
       setProfileModalOpen(true);
     } catch (error) {
@@ -179,15 +226,17 @@ const Dashboard = () => {
   const saveInternship = async (internship) => {
     const internshipId = internship._id;
     // Optimistically update UI
-    setSavedInternshipIds(prev => new Set([...prev, internshipId]));
+    setSavedInternshipIds((prev) => new Set([...prev, internshipId]));
     try {
-      await axios.post('http://localhost:5000/api/internships/save', { internship_id: internshipId });
+      await axios.post('http://localhost:5000/api/internships/save', {
+        internship_id: internshipId,
+      });
       alert('Saved successfully');
       fetchSavedInternships(); // Ensure consistency
     } catch (error) {
       alert('Save failed');
       // Revert optimistic update
-      setSavedInternshipIds(prev => {
+      setSavedInternshipIds((prev) => {
         const newSet = new Set(prev);
         newSet.delete(internshipId);
         return newSet;
@@ -197,7 +246,7 @@ const Dashboard = () => {
 
   const unsaveInternship = async (internshipId) => {
     // Optimistically update UI
-    setSavedInternshipIds(prev => {
+    setSavedInternshipIds((prev) => {
       const newSet = new Set(prev);
       newSet.delete(internshipId);
       return newSet;
@@ -209,7 +258,7 @@ const Dashboard = () => {
     } catch (error) {
       alert('Unsave failed');
       // Revert optimistic update
-      setSavedInternshipIds(prev => new Set([...prev, internshipId]));
+      setSavedInternshipIds((prev) => new Set([...prev, internshipId]));
     }
   };
 
@@ -239,7 +288,9 @@ const Dashboard = () => {
     const newDeadline = new Date(currentDeadline || Date.now());
     newDeadline.setDate(newDeadline.getDate() + 7);
     try {
-      await axios.put(`http://localhost:5000/api/internships/${internshipId}`, { applicationDeadline: newDeadline });
+      await axios.put(`http://localhost:5000/api/internships/${internshipId}`, {
+        applicationDeadline: newDeadline,
+      });
       alert('Deadline extended by 7 days');
       fetchEmployerInternships();
     } catch (error) {
@@ -247,49 +298,62 @@ const Dashboard = () => {
     }
   };
 
-  const filteredInternships = useMemo(() =>
-    allInternships.filter(internship =>
-      internship.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      (filterLocation === '' || internship.location.toLowerCase().includes(filterLocation.toLowerCase()))
-    ), [allInternships, searchTerm, filterLocation]);
+  const filteredInternships = useMemo(
+    () =>
+      allInternships.filter(
+        (internship) =>
+          internship.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
+          (filterLocation === '' ||
+            internship.location.toLowerCase().includes(filterLocation.toLowerCase()))
+      ),
+    [allInternships, searchTerm, filterLocation]
+  );
 
-  if (!user) return <div className="flex justify-center items-center h-screen"><div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div></div>;
+  if (!user)
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
+      </div>
+    );
 
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1
-      }
-    }
+        staggerChildren: 0.1,
+      },
+    },
   };
 
   const itemVariants = {
     hidden: { y: 20, opacity: 0 },
     visible: {
       y: 0,
-      opacity: 1
-    }
+      opacity: 1,
+    },
   };
 
-  const sidebarItems = user.role === 'Candidate' ? [
-    { id: 'overview', label: 'Overview', icon: FaHome },
-    { id: 'browse', label: 'Browse Internships', icon: FaSearch },
-    { id: 'applications', label: 'My Applications', icon: FaList },
-    { id: 'saved', label: 'Saved', icon: FaBookmark },
-    { id: 'messages', label: 'Messages', icon: FaEnvelope },
-    { id: 'profile', label: 'Profile', icon: FaUser },
-    { id: 'resources', label: 'Resources', icon: FaGraduationCap },
-  ] : [
-    { id: 'overview', label: 'Overview', icon: FaHome },
-    { id: 'post', label: 'Post Internship', icon: FaBriefcase },
-    { id: 'internships', label: 'My Internships', icon: FaBriefcase },
-    { id: 'applications', label: 'Manage Applications', icon: FaList },
-    { id: 'analytics', label: 'Analytics', icon: FaChartBar },
-    { id: 'messages', label: 'Messages', icon: FaEnvelope },
-    { id: 'profile', label: 'Profile', icon: FaUser },
-  ];
+  const sidebarItems =
+    user.role === 'Candidate'
+      ? [
+          { id: 'overview', label: 'Overview', icon: FaHome },
+          { id: 'browse', label: 'Browse Internships', icon: FaSearch },
+          { id: 'applications', label: 'My Applications', icon: FaList },
+          { id: 'saved', label: 'Saved', icon: FaBookmark },
+          { id: 'messages', label: 'Messages', icon: FaEnvelope },
+          { id: 'profile', label: 'Profile', icon: FaUser },
+          { id: 'resources', label: 'Resources', icon: FaGraduationCap },
+        ]
+      : [
+          { id: 'overview', label: 'Overview', icon: FaHome },
+          { id: 'post', label: 'Post Internship', icon: FaBriefcase },
+          { id: 'internships', label: 'My Internships', icon: FaBriefcase },
+          { id: 'applications', label: 'Manage Applications', icon: FaList },
+          { id: 'analytics', label: 'Analytics', icon: FaChartBar },
+          { id: 'messages', label: 'Messages', icon: FaEnvelope },
+          { id: 'profile', label: 'Profile', icon: FaUser },
+        ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 relative overflow-hidden flex">
@@ -303,7 +367,7 @@ const Dashboard = () => {
           transition={{
             duration: 20,
             repeat: Infinity,
-            ease: "linear"
+            ease: 'linear',
           }}
           className="absolute top-20 left-10 w-20 h-20 bg-white opacity-10 rounded-full"
         />
@@ -315,7 +379,7 @@ const Dashboard = () => {
           transition={{
             duration: 25,
             repeat: Infinity,
-            ease: "linear"
+            ease: 'linear',
           }}
           className="absolute bottom-20 right-10 w-16 h-16 bg-white opacity-10 rounded-full"
         />
@@ -326,7 +390,7 @@ const Dashboard = () => {
           transition={{
             duration: 30,
             repeat: Infinity,
-            ease: "linear"
+            ease: 'linear',
           }}
           className="absolute top-1/2 left-1/4 w-12 h-12 bg-white opacity-5 rounded-full"
         />
@@ -358,7 +422,9 @@ const Dashboard = () => {
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setActiveTab(item.id)}
                 className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition duration-200 ${
-                  activeTab === item.id ? 'bg-blue-100 text-blue-600' : 'text-gray-700 hover:bg-gray-100'
+                  activeTab === item.id
+                    ? 'bg-blue-100 text-blue-600'
+                    : 'text-gray-700 hover:bg-gray-100'
                 }`}
               >
                 <item.icon />
@@ -393,7 +459,7 @@ const Dashboard = () => {
                 animate={{ x: 0, opacity: 1 }}
                 className="text-3xl font-bold text-gray-900"
               >
-                {sidebarItems.find(item => item.id === activeTab)?.label}
+                {sidebarItems.find((item) => item.id === activeTab)?.label}
               </motion.h1>
               <div className="flex items-center space-x-4">
                 <motion.button
@@ -439,14 +505,18 @@ const Dashboard = () => {
                       whileHover={{ scale: 1.05 }}
                       className="bg-white p-6 rounded-xl shadow-xl border border-gray-200"
                     >
-                      <h3 className="text-2xl font-bold text-green-600">{applications.filter(app => app.status === 'Approved').length}</h3>
+                      <h3 className="text-2xl font-bold text-green-600">
+                        {applications.filter((app) => app.status === 'Approved').length}
+                      </h3>
                       <p className="text-gray-600">Approved</p>
                     </motion.div>
                     <motion.div
                       whileHover={{ scale: 1.05 }}
                       className="bg-white p-6 rounded-xl shadow-xl border border-gray-200"
                     >
-                      <h3 className="text-2xl font-bold text-purple-600">{savedInternships.length}</h3>
+                      <h3 className="text-2xl font-bold text-purple-600">
+                        {savedInternships.length}
+                      </h3>
                       <p className="text-gray-600">Saved Internships</p>
                     </motion.div>
                   </motion.div>
@@ -469,8 +539,12 @@ const Dashboard = () => {
                           whileHover={{ scale: 1.05, y: -5 }}
                           className="bg-white p-6 rounded-xl shadow-xl border border-gray-200"
                         >
-                          <h3 className="text-xl font-semibold mb-2 text-gray-800">{internship.title}</h3>
-                          <p className="text-gray-600 mb-4">{internship.description.substring(0, 100)}...</p>
+                          <h3 className="text-xl font-semibold mb-2 text-gray-800">
+                            {internship.title}
+                          </h3>
+                          <p className="text-gray-600 mb-4">
+                            {internship.description.substring(0, 100)}...
+                          </p>
                           <div className="flex items-center justify-between mb-4">
                             <span className="text-sm text-gray-500">{internship.location}</span>
                             <span className="text-sm font-medium text-green-600 flex items-center bg-green-100 px-2 py-1 rounded-full">
@@ -479,9 +553,7 @@ const Dashboard = () => {
                             </span>
                           </div>
                           {appliedInternshipIds.has(internship._id) ? (
-                            <motion.button
-                              className="w-full bg-gray-400 text-white py-2 rounded-lg cursor-not-allowed flex items-center justify-center space-x-2 shadow-lg"
-                            >
+                            <motion.button className="w-full bg-gray-400 text-white py-2 rounded-lg cursor-not-allowed flex items-center justify-center space-x-2 shadow-lg">
                               <FaCheck />
                               <span>Applied</span>
                             </motion.button>
@@ -510,7 +582,9 @@ const Dashboard = () => {
                     animate={{ opacity: 1, y: 0 }}
                     className="bg-white p-6 rounded-xl shadow-xl border border-gray-200"
                   >
-                    <h2 className="text-2xl font-bold text-gray-900 mb-4">Search & Filter Internships</h2>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                      Search & Filter Internships
+                    </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="relative">
                         <FaSearch className="absolute left-3 top-3 text-gray-400" />
@@ -547,8 +621,12 @@ const Dashboard = () => {
                         whileHover={{ scale: 1.05, y: -5 }}
                         className="bg-white p-6 rounded-xl shadow-xl border border-gray-200"
                       >
-                        <h3 className="text-xl font-semibold mb-2 text-gray-800">{internship.title}</h3>
-                        <p className="text-gray-600 mb-4">{internship.description.substring(0, 100)}...</p>
+                        <h3 className="text-xl font-semibold mb-2 text-gray-800">
+                          {internship.title}
+                        </h3>
+                        <p className="text-gray-600 mb-4">
+                          {internship.description.substring(0, 100)}...
+                        </p>
                         <div className="flex items-center justify-between mb-4">
                           <span className="text-sm text-gray-500">{internship.location}</span>
                           <div className="flex items-center space-x-2">
@@ -564,45 +642,43 @@ const Dashboard = () => {
                             </span>
                           </div>
                         </div>
-                          <div className="flex space-x-2">
-                            {appliedInternshipIds.has(internship._id) ? (
-                              <motion.button
-                                className="flex-1 bg-gray-400 text-white py-2 rounded-lg cursor-not-allowed flex items-center justify-center space-x-2 shadow-lg"
-                              >
-                                <FaCheck />
-                                <span>Applied</span>
-                              </motion.button>
-                            ) : (
-                              <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => applyForInternship(internship)}
-                                className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-2 rounded-lg hover:from-blue-600 hover:to-purple-700 transition duration-200 flex items-center justify-center space-x-2 shadow-lg"
-                              >
-                                <FaPaperPlane />
-                                <span>Apply</span>
-                              </motion.button>
-                            )}
-                            {savedInternshipIds.has(internship._id) ? (
-                              <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => unsaveInternship(internship)}
-                                className="p-2 bg-red-100 rounded-lg hover:bg-red-200 transition duration-200"
-                              >
-                                <FaTimes className="text-red-600" />
-                              </motion.button>
-                            ) : (
-                              <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => saveInternship(internship)}
-                                className="p-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition duration-200"
-                              >
-                                <FaBookmark className="text-gray-600" />
-                              </motion.button>
-                            )}
-                          </div>
+                        <div className="flex space-x-2">
+                          {appliedInternshipIds.has(internship._id) ? (
+                            <motion.button className="flex-1 bg-gray-400 text-white py-2 rounded-lg cursor-not-allowed flex items-center justify-center space-x-2 shadow-lg">
+                              <FaCheck />
+                              <span>Applied</span>
+                            </motion.button>
+                          ) : (
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => applyForInternship(internship)}
+                              className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-2 rounded-lg hover:from-blue-600 hover:to-purple-700 transition duration-200 flex items-center justify-center space-x-2 shadow-lg"
+                            >
+                              <FaPaperPlane />
+                              <span>Apply</span>
+                            </motion.button>
+                          )}
+                          {savedInternshipIds.has(internship._id) ? (
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => unsaveInternship(internship._id)}
+                              className="p-2 bg-red-100 rounded-lg hover:bg-red-200 transition duration-200"
+                            >
+                              <FaTimes className="text-red-600" />
+                            </motion.button>
+                          ) : (
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => saveInternship(internship)}
+                              className="p-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition duration-200"
+                            >
+                              <FaBookmark className="text-gray-600" />
+                            </motion.button>
+                          )}
+                        </div>
                       </motion.div>
                     ))}
                   </motion.div>
@@ -630,44 +706,56 @@ const Dashboard = () => {
                       animate="visible"
                       className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
                     >
-                      {applications.map((app, index) => (
-                        <motion.div
-                          key={app._id}
-                          variants={itemVariants}
-                          whileHover={{ scale: 1.05, y: -5 }}
-                          className="bg-white p-6 rounded-xl shadow-xl border border-gray-200"
-                        >
-                          <h3 className="text-xl font-semibold mb-2 text-gray-800">{app.internship_id.title}</h3>
-                          <p className="text-gray-600 mb-2">{app.internship_id.company_id.name}</p>
-                          <p className={`text-sm font-medium mb-4 px-3 py-1 rounded-full inline-block ${app.status === 'Approved' ? 'text-green-600 bg-green-100' : app.status === 'Rejected' ? 'text-red-600 bg-red-100' : 'text-yellow-600 bg-yellow-100'}`}>
-                            Status: {app.status}
-                          </p>
-                          <div className="text-sm text-gray-500">
-                            Applied on: {new Date(app.createdAt).toLocaleDateString()}
-                          </div>
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => {
-                              setSelectedAppForMessage(app);
-                              setSendMessageModalOpen(true);
-                            }}
-                            className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-200"
+                      {applications
+                        .filter((app) => app.internship_id && app.internship_id.title)
+                        .map((app, index) => (
+                          <motion.div
+                            key={app._id}
+                            variants={itemVariants}
+                            whileHover={{ scale: 1.05, y: -5 }}
+                            className="bg-white p-6 rounded-xl shadow-xl border border-gray-200"
                           >
-                            Send Message
-                          </motion.button>
-                        </motion.div>
-                      ))}
+                            <h3 className="text-xl font-semibold mb-2 text-gray-800">
+                              {app.internship_id.title}
+                            </h3>
+                            <p className="text-gray-600 mb-2">
+                              {app.internship_id.company_id.name}
+                            </p>
+                            <p
+                              className={`text-sm font-medium mb-4 px-3 py-1 rounded-full inline-block ${
+                                app.status === 'Approved'
+                                  ? 'text-green-600 bg-green-100'
+                                  : app.status === 'Rejected'
+                                  ? 'text-red-600 bg-red-100'
+                                  : 'text-yellow-600 bg-yellow-100'
+                              }`}
+                            >
+                              Status: {app.status}
+                            </p>
+                            <div className="text-sm text-gray-500">
+                              Applied on:{' '}
+                              {new Date(app.createdAt).toLocaleDateString()}
+                            </div>
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => {
+                                setSelectedAppForMessage(app);
+                                setSendMessageModalOpen(true);
+                              }}
+                              className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-200 mt-3"
+                            >
+                              Send Message
+                            </motion.button>
+                          </motion.div>
+                        ))}
                     </motion.div>
                   )}
                 </motion.div>
               )}
 
               {activeTab === 'saved' && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                >
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
                   <h2 className="text-3xl font-bold text-gray-900 mb-4 flex items-center space-x-2">
                     <FaBookmark className="text-purple-500" />
                     <span>Saved Internships</span>
@@ -690,8 +778,12 @@ const Dashboard = () => {
                           whileHover={{ scale: 1.05, y: -5 }}
                           className="bg-white p-6 rounded-xl shadow-xl border border-gray-200"
                         >
-                          <h3 className="text-xl font-semibold mb-2 text-gray-800">{internship.title}</h3>
-                          <p className="text-gray-600 mb-4">{internship.description.substring(0, 100)}...</p>
+                          <h3 className="text-xl font-semibold mb-2 text-gray-800">
+                            {internship.title}
+                          </h3>
+                          <p className="text-gray-600 mb-4">
+                            {internship.description.substring(0, 100)}...
+                          </p>
                           <div className="flex items-center justify-between mb-4">
                             <span className="text-sm text-gray-500">{internship.location}</span>
                             <div className="flex items-center space-x-2">
@@ -730,16 +822,15 @@ const Dashboard = () => {
                       ))}
                     </motion.div>
                   ) : (
-                    <p className="text-gray-600">No saved internships yet. Start browsing and save interesting opportunities!</p>
+                    <p className="text-gray-600">
+                      No saved internships yet. Start browsing and save interesting opportunities!
+                    </p>
                   )}
                 </motion.div>
               )}
 
               {activeTab === 'messages' && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                >
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
                   <h2 className="text-3xl font-bold text-gray-900 mb-4 flex items-center space-x-2">
                     <FaEnvelope className="text-blue-500" />
                     <span>Messages</span>
@@ -751,46 +842,57 @@ const Dashboard = () => {
                       animate="visible"
                       className="space-y-4"
                     >
-                      {messages.map((msg, index) => (
-                        <motion.div
-                          key={msg._id}
-                          variants={itemVariants}
-                          whileHover={{ scale: 1.02 }}
-                          className={`bg-white p-6 rounded-xl shadow-xl border border-gray-200 ${!msg.is_read ? 'border-l-4 border-l-blue-500' : ''}`}
-                        >
-                          <div className="flex justify-between items-start mb-2">
-                            <h3 className="text-lg font-semibold text-gray-800">{msg.sender_id.name} - {msg.application_id.internship_id.title}</h3>
-                            <span className="text-sm text-gray-500">{new Date(msg.createdAt).toLocaleDateString()}</span>
-                          </div>
-                          <p className="text-gray-600 mb-4">{msg.message}</p>
-                          <div className="flex space-x-2">
-                            <motion.button
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              onClick={() => {
-                                setSelectedMessageForReply(msg);
-                                setReplyModalOpen(true);
-                              }}
-                              className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-200"
-                            >
-                              Reply
-                            </motion.button>
-                            {!msg.is_read && (
+                      {messages
+                        .filter((msg) => msg.application_id && msg.application_id.internship_id)
+                        .map((msg, index) => (
+                          <motion.div
+                            key={msg._id}
+                            variants={itemVariants}
+                            whileHover={{ scale: 1.02 }}
+                            className={`bg-white p-6 rounded-xl shadow-xl border border-gray-200 ${
+                              !msg.is_read ? 'border-l-4 border-l-blue-500' : ''
+                            }`}
+                          >
+                            <div className="flex justify-between items-start mb-2">
+                              <h3 className="text-lg font-semibold text-gray-800">
+                                {msg.sender_id.name} -{' '}
+                                {msg.application_id.internship_id.title}
+                              </h3>
+                              <span className="text-sm text-gray-500">
+                                {new Date(msg.createdAt).toLocaleDateString()}
+                              </span>
+                            </div>
+                            <p className="text-gray-600 mb-4">{msg.message}</p>
+                            <div className="flex space-x-2">
                               <motion.button
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
-                                onClick={() => markMessageAsRead(msg._id)}
-                                className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition duration-200"
+                                onClick={() => {
+                                  setSelectedMessageForReply(msg);
+                                  setReplyModalOpen(true);
+                                }}
+                                className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-200"
                               >
-                                Mark as Read
+                                Reply
                               </motion.button>
-                            )}
-                          </div>
-                        </motion.div>
-                      ))}
+                              {!msg.is_read && (
+                                <motion.button
+                                  whileHover={{ scale: 1.05 }}
+                                  whileTap={{ scale: 0.95 }}
+                                  onClick={() => markMessageAsRead(msg._id)}
+                                  className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition duration-200"
+                                >
+                                  Mark as Read
+                                </motion.button>
+                              )}
+                            </div>
+                          </motion.div>
+                        ))}
                     </motion.div>
                   ) : (
-                    <p className="text-gray-600">No messages yet. Messages from employers will appear here.</p>
+                    <p className="text-gray-600">
+                      No messages yet. Messages from employers will appear here.
+                    </p>
                   )}
                 </motion.div>
               )}
@@ -812,10 +914,7 @@ const Dashboard = () => {
               )}
 
               {activeTab === 'resources' && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                >
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
                   <h2 className="text-3xl font-bold text-gray-900 mb-4 flex items-center space-x-2">
                     <FaGraduationCap className="text-green-500" />
                     <span>Learning Resources</span>
@@ -832,7 +931,9 @@ const Dashboard = () => {
                       className="bg-white p-6 rounded-xl shadow-xl border border-gray-200"
                     >
                       <h3 className="text-xl font-semibold mb-2">Resume Writing Tips</h3>
-                      <p className="text-gray-600 mb-4">Learn how to create a standout resume for internship applications.</p>
+                      <p className="text-gray-600 mb-4">
+                        Learn how to create a standout resume for internship applications.
+                      </p>
                       <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
@@ -847,7 +948,9 @@ const Dashboard = () => {
                       className="bg-white p-6 rounded-xl shadow-xl border border-gray-200"
                     >
                       <h3 className="text-xl font-semibold mb-2">Interview Preparation</h3>
-                      <p className="text-gray-600 mb-4">Master the art of interviewing with tips from industry experts.</p>
+                      <p className="text-gray-600 mb-4">
+                        Master the art of interviewing with tips from industry experts.
+                      </p>
                       <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
@@ -862,7 +965,9 @@ const Dashboard = () => {
                       className="bg-white p-6 rounded-xl shadow-xl border border-gray-200"
                     >
                       <h3 className="text-xl font-semibold mb-2">Career Resources</h3>
-                      <p className="text-gray-600 mb-4">Explore career paths, industry insights, and professional development.</p>
+                      <p className="text-gray-600 mb-4">
+                        Explore career paths, industry insights, and professional development.
+                      </p>
                       <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
@@ -877,7 +982,9 @@ const Dashboard = () => {
                       className="bg-white p-6 rounded-xl shadow-xl border border-gray-200"
                     >
                       <h3 className="text-xl font-semibold mb-2">Networking Strategies</h3>
-                      <p className="text-gray-600 mb-4">Build professional connections and expand your network effectively.</p>
+                      <p className="text-gray-600 mb-4">
+                        Build professional connections and expand your network effectively.
+                      </p>
                       <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
@@ -892,7 +999,9 @@ const Dashboard = () => {
                       className="bg-white p-6 rounded-xl shadow-xl border border-gray-200"
                     >
                       <h3 className="text-xl font-semibold mb-2">Skill Development</h3>
-                      <p className="text-gray-600 mb-4">Enhance your technical and soft skills for better job prospects.</p>
+                      <p className="text-gray-600 mb-4">
+                        Enhance your technical and soft skills for better job prospects.
+                      </p>
                       <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
@@ -906,8 +1015,13 @@ const Dashboard = () => {
                       whileHover={{ scale: 1.05 }}
                       className="bg-white p-6 rounded-xl shadow-xl border border-gray-200"
                     >
-                      <h3 className="text-xl font-semibold mb-2">Internship Success Stories</h3>
-                      <p className="text-gray-600 mb-4">Read inspiring stories from successful interns and learn from their experiences.</p>
+                      <h3 className="text-xl font-semibold mb-2">
+                        Internship Success Stories
+                      </h3>
+                      <p className="text-gray-600 mb-4">
+                        Read inspiring stories from successful interns and learn from their
+                        experiences.
+                      </p>
                       <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
@@ -919,7 +1033,6 @@ const Dashboard = () => {
                   </motion.div>
                 </motion.div>
               )}
-
             </>
           )}
 
@@ -943,14 +1056,18 @@ const Dashboard = () => {
                       whileHover={{ scale: 1.05 }}
                       className="bg-white p-6 rounded-xl shadow-xl border border-gray-200"
                     >
-                      <h3 className="text-2xl font-bold text-green-600">{applications.filter(app => app.status === 'Approved').length}</h3>
+                      <h3 className="text-2xl font-bold text-green-600">
+                        {applications.filter((app) => app.status === 'Approved').length}
+                      </h3>
                       <p className="text-gray-600">Approved</p>
                     </motion.div>
                     <motion.div
                       whileHover={{ scale: 1.05 }}
                       className="bg-white p-6 rounded-xl shadow-xl border border-gray-200"
                     >
-                      <h3 className="text-2xl font-bold text-purple-600">{employerInternships.length}</h3>
+                      <h3 className="text-2xl font-bold text-purple-600">
+                        {employerInternships.length}
+                      </h3>
                       <p className="text-gray-600">Posted Internships</p>
                     </motion.div>
                   </motion.div>
@@ -974,10 +1091,7 @@ const Dashboard = () => {
               )}
 
               {activeTab === 'internships' && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                >
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
                   <h2 className="text-3xl font-bold text-gray-900 mb-4 flex items-center space-x-2">
                     <FaBriefcase className="text-blue-500" />
                     <span>My Internships</span>
@@ -1000,13 +1114,17 @@ const Dashboard = () => {
                           whileHover={{ scale: 1.05, y: -5 }}
                           className="bg-white p-6 rounded-xl shadow-xl border border-gray-200"
                         >
-                          <h3 className="text-xl font-semibold mb-2 text-gray-800">{internship.title}</h3>
-                          <p className="text-gray-600 mb-4">{internship.description.substring(0, 100)}...</p>
+                          <h3 className="text-xl font-semibold mb-2 text-gray-800">
+                            {internship.title}
+                          </h3>
+                          <p className="text-gray-600 mb-4">
+                            {internship.description.substring(0, 100)}...
+                          </p>
                           <div className="flex items-center justify-between mb-4">
                             <span className="text-sm text-gray-500">{internship.location}</span>
-                          <span className="text-sm font-medium text-blue-600 bg-blue-100 px-2 py-1 rounded-full">
-                            {internship.company_id.name}
-                          </span>
+                            <span className="text-sm font-medium text-blue-600 bg-blue-100 px-2 py-1 rounded-full">
+                              {internship.company_id.name}
+                            </span>
                           </div>
                           <div className="flex space-x-2">
                             <motion.button
@@ -1030,7 +1148,9 @@ const Dashboard = () => {
                       ))}
                     </motion.div>
                   ) : (
-                    <p className="text-gray-600">No internships posted yet. Start posting to attract candidates!</p>
+                    <p className="text-gray-600">
+                      No internships posted yet. Start posting to attract candidates!
+                    </p>
                   )}
                 </motion.div>
               )}
@@ -1056,72 +1176,81 @@ const Dashboard = () => {
                       animate="visible"
                       className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
                     >
-                      {applications.map((app, index) => (
-                        <motion.div
-                          key={app._id}
-                          variants={itemVariants}
-                          whileHover={{ scale: 1.05, y: -5 }}
-                          className="bg-white p-6 rounded-xl shadow-xl border border-gray-200"
-                        >
-                          <h3 className="text-xl font-semibold mb-2 text-gray-800">{app.internship_id.title}</h3>
-                          <p className="text-gray-600 mb-2">{app.candidate_id.name}</p>
-                          <p className={`text-sm font-medium mb-4 px-3 py-1 rounded-full inline-block ${app.status === 'Approved' ? 'text-green-600 bg-green-100' : app.status === 'Rejected' ? 'text-red-600 bg-red-100' : 'text-yellow-600 bg-yellow-100'}`}>
-                            Status: {app.status}
-                          </p>
-                          {app.resume_url && (
-                            <div className="mb-4">
-                              <a
-                                href={`http://localhost:5000/${app.resume_url}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center space-x-2 text-blue-600 hover:text-blue-800 transition duration-200"
+                      {applications
+                        .filter((app) => app.internship_id && app.candidate_id)
+                        .map((app, index) => (
+                          <motion.div
+                            key={app._id}
+                            variants={itemVariants}
+                            whileHover={{ scale: 1.05, y: -5 }}
+                            className="bg-white p-6 rounded-xl shadow-xl border border-gray-200"
+                          >
+                            <h3 className="text-xl font-semibold mb-2 text-gray-800">
+                              {app.internship_id.title}
+                            </h3>
+                            <p className="text-gray-600 mb-2">{app.candidate_id.name}</p>
+                            <p
+                              className={`text-sm font-medium mb-4 px-3 py-1 rounded-full inline-block ${
+                                app.status === 'Approved'
+                                  ? 'text-green-600 bg-green-100'
+                                  : app.status === 'Rejected'
+                                  ? 'text-red-600 bg-red-100'
+                                  : 'text-yellow-600 bg-yellow-100'
+                              }`}
+                            >
+                              Status: {app.status}
+                            </p>
+                            {app.resume_url && (
+                              <div className="mb-4">
+                                <a
+                                  href={`http://localhost:5000/${app.resume_url}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center space-x-2 text-blue-600 hover:text-blue-800 transition duration-200"
+                                >
+                                  <FaFileUpload />
+                                  <span>View Resume</span>
+                                </a>
+                              </div>
+                            )}
+                            <div className="flex space-x-2">
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => updateApplicationStatus(app._id, 'Approved')}
+                                className="flex-1 bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition duration-200"
                               >
-                                <FaFileUpload />
-                                <span>View Resume</span>
-                              </a>
+                                Approve
+                              </motion.button>
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => updateApplicationStatus(app._id, 'Rejected')}
+                                className="flex-1 bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition duration-200"
+                              >
+                                Reject
+                              </motion.button>
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => {
+                                  setSelectedAppForMessage(app);
+                                  setSendMessageModalOpen(true);
+                                }}
+                                className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-200"
+                              >
+                                Send Message
+                              </motion.button>
                             </div>
-                          )}
-                          <div className="flex space-x-2">
-                            <motion.button
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              onClick={() => updateApplicationStatus(app._id, 'Approved')}
-                              className="flex-1 bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition duration-200"
-                            >
-                              Approve
-                            </motion.button>
-                            <motion.button
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              onClick={() => updateApplicationStatus(app._id, 'Rejected')}
-                              className="flex-1 bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition duration-200"
-                            >
-                              Reject
-                            </motion.button>
-                            <motion.button
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              onClick={() => {
-                                setSelectedAppForMessage(app);
-                                setSendMessageModalOpen(true);
-                              }}
-                              className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-200"
-                            >
-                              Send Message
-                            </motion.button>
-                          </div>
-                        </motion.div>
-                      ))}
+                          </motion.div>
+                        ))}
                     </motion.div>
                   )}
                 </motion.div>
               )}
 
               {activeTab === 'analytics' && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                >
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
                   <h2 className="text-3xl font-bold text-gray-900 mb-4 flex items-center space-x-2">
                     <FaChartBar className="text-blue-500" />
                     <span>Analytics</span>
@@ -1133,7 +1262,9 @@ const Dashboard = () => {
                     >
                       <h3 className="text-xl font-semibold mb-2">Application Trends</h3>
                       <p className="text-gray-600">View application statistics over time.</p>
-                      <div className="mt-4 h-32 bg-gray-100 rounded flex items-center justify-center">Chart Placeholder</div>
+                      <div className="mt-4 h-32 bg-gray-100 rounded flex items-center justify-center">
+                        Chart Placeholder
+                      </div>
                     </motion.div>
                     <motion.div
                       whileHover={{ scale: 1.05 }}
@@ -1141,17 +1272,16 @@ const Dashboard = () => {
                     >
                       <h3 className="text-xl font-semibold mb-2">Top Skills</h3>
                       <p className="text-gray-600">Most sought-after skills in applicants.</p>
-                      <div className="mt-4 h-32 bg-gray-100 rounded flex items-center justify-center">Chart Placeholder</div>
+                      <div className="mt-4 h-32 bg-gray-100 rounded flex items-center justify-center">
+                        Chart Placeholder
+                      </div>
                     </motion.div>
                   </div>
                 </motion.div>
               )}
 
               {activeTab === 'messages' && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                >
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
                   <h2 className="text-3xl font-bold text-gray-900 mb-4 flex items-center space-x-2">
                     <FaEnvelope className="text-blue-500" />
                     <span>Messages</span>
@@ -1168,11 +1298,17 @@ const Dashboard = () => {
                           key={msg._id}
                           variants={itemVariants}
                           whileHover={{ scale: 1.02 }}
-                          className={`bg-white p-6 rounded-xl shadow-xl border border-gray-200 ${!msg.is_read ? 'border-l-4 border-l-blue-500' : ''}`}
+                          className={`bg-white p-6 rounded-xl shadow-xl border border-gray-200 ${
+                            !msg.is_read ? 'border-l-4 border-l-blue-500' : ''
+                          }`}
                         >
                           <div className="flex justify-between items-start mb-2">
-                            <h3 className="text-lg font-semibold text-gray-800">{msg.sender_id.name} - {msg.application_id.internship_id.title}</h3>
-                            <span className="text-sm text-gray-500">{new Date(msg.createdAt).toLocaleDateString()}</span>
+                            <h3 className="text-lg font-semibold text-gray-800">
+                              {msg.sender_id.name} - {msg.application_id.internship_id.title}
+                            </h3>
+                            <span className="text-sm text-gray-500">
+                              {new Date(msg.createdAt).toLocaleDateString()}
+                            </span>
                           </div>
                           <p className="text-gray-600 mb-4">{msg.message}</p>
                           <div className="flex space-x-2">
@@ -1210,7 +1346,9 @@ const Dashboard = () => {
                       ))}
                     </motion.div>
                   ) : (
-                    <p className="text-gray-600">No messages yet. Messages from candidates will appear here.</p>
+                    <p className="text-gray-600">
+                      No messages yet. Messages from candidates will appear here.
+                    </p>
                   )}
                 </motion.div>
               )}
@@ -1230,11 +1368,19 @@ const Dashboard = () => {
                   </Link>
                 </motion.div>
               )}
-
             </>
           )}
         </main>
       </div>
+
+      {/* ✅ Apply Modal (this is what makes your Apply button work) */}
+      {applyModalOpen && selectedInternship && (
+        <ApplyModal
+          internship={selectedInternship}
+          onClose={() => setApplyModalOpen(false)}
+          onApply={handleApplySuccess}
+        />
+      )}
 
       {/* Send Message Modal */}
       {sendMessageModalOpen && (
@@ -1260,7 +1406,10 @@ const Dashboard = () => {
                 Send
               </button>
               <button
-                onClick={() => { setSendMessageModalOpen(false); setMessageText(''); }}
+                onClick={() => {
+                  setSendMessageModalOpen(false);
+                  setMessageText('');
+                }}
                 className="flex-1 bg-gray-500 text-white py-2 rounded-lg hover:bg-gray-600"
               >
                 Cancel
@@ -1294,7 +1443,12 @@ const Dashboard = () => {
               {candidateProfile.profile.resume_url && (
                 <div>
                   <button
-                    onClick={() => window.open(`http://localhost:5000/${candidateProfile.profile.resume_url}`, '_blank')}
+                    onClick={() =>
+                      window.open(
+                        `http://localhost:5000/${candidateProfile.profile.resume_url}`,
+                        '_blank'
+                      )
+                    }
                     className="text-blue-600 hover:text-blue-800 cursor-pointer"
                   >
                     View Resume
@@ -1336,7 +1490,10 @@ const Dashboard = () => {
                 Send Reply
               </button>
               <button
-                onClick={() => { setReplyModalOpen(false); setReplyText(''); }}
+                onClick={() => {
+                  setReplyModalOpen(false);
+                  setReplyText('');
+                }}
                 className="flex-1 bg-gray-500 text-white py-2 rounded-lg hover:bg-gray-600"
               >
                 Cancel

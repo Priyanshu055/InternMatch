@@ -60,6 +60,25 @@ router.get('/employer', auth, async (req, res) => {
   }
 });
 
+// Get saved internships (Candidate only)
+router.get('/saved', auth, async (req, res) => {
+  try {
+    if (req.user.role !== 'Candidate') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+    const savedInternships = await SavedInternship.find({ user_id: req.user.userId }).populate({
+      path: 'internship_id',
+      populate: { path: 'company_id', select: 'name profileImage' }
+    });
+    // Filter out null internship_id (in case internships were deleted)
+    const validSavedInternships = savedInternships.filter(save => save.internship_id).map(save => save.internship_id);
+    res.json(validSavedInternships);
+  } catch (error) {
+    console.error('Get saved internships error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // Get internship by ID
 router.get('/:id', async (req, res) => {
   try {
@@ -161,22 +180,7 @@ router.post('/save', auth, async (req, res) => {
   }
 });
 
-// Get saved internships (Candidate only)
-router.get('/saved', auth, async (req, res) => {
-  try {
-    if (req.user.role !== 'Candidate') {
-      return res.status(403).json({ message: 'Access denied' });
-    }
-    const savedInternships = await SavedInternship.find({ user_id: req.user.userId }).populate({
-      path: 'internship_id',
-      populate: { path: 'company_id', select: 'name profileImage' }
-    });
-    res.json(savedInternships.map(save => save.internship_id));
-  } catch (error) {
-    console.error('Get saved internships error:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
+
 
 // Unsave internship (Candidate only)
 router.delete('/saved/:internshipId', auth, async (req, res) => {

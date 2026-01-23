@@ -7,7 +7,7 @@ const router = express.Router();
 // Register
 router.post('/register', async (req, res) => {
   try {
-    console.log('Registration request:', req.body);
+    console.log('Registration request for:', req.body.email);
     const { name, email, password, role } = req.body;
 
     // Check if user exists
@@ -41,7 +41,7 @@ router.post('/register', async (req, res) => {
 // Login
 router.post('/login', async (req, res) => {
   try {
-    console.log('Login request:', req.body);
+    console.log('Login request for:', req.body.email);
     const { email, password } = req.body;
 
     // Find user

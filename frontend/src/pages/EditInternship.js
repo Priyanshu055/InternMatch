@@ -23,7 +23,7 @@ const EditInternship = () => {
   useEffect(() => {
     const fetchInternship = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/internships/${id}`);
+        const res = await axios.get(`https://intern-match-backend-1.onrender.com/api/internships/${id}`);
         const internship = res.data;
         setFormData({
           title: internship.title,
@@ -59,7 +59,7 @@ const EditInternship = () => {
         required_skills: formData.required_skills.split(',').map(s => s.trim()),
         applicationDeadline: formData.applicationDeadline ? new Date(formData.applicationDeadline) : null,
       };
-      await axios.put(`http://localhost:5000/api/internships/${id}`, data);
+      await axios.put(`https://intern-match-backend-1.onrender.com/api/internships/${id}`, data);
       alert('Internship updated successfully!');
       localStorage.setItem('refreshInternships', 'true');
       navigate('/dashboard');

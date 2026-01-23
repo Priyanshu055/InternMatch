@@ -40,14 +40,14 @@ const ApplyModal = ({ internship, onClose, onApply }) => {
         formDataToSend.append('resume', resumeFile);
       }
 
-      await axios.post('http://localhost:5000/api/applications', formDataToSend, {
+      await axios.post('https://intern-match-backend-1.onrender.com/api/applications', formDataToSend, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
       });
 
       // Auto-save the internship after applying
-      await axios.post('http://localhost:5000/api/internships/save', { internship_id: internship._id }, {
+      await axios.post('https://intern-match-backend-1.onrender.com/api/internships/save', { internship_id: internship._id }, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },

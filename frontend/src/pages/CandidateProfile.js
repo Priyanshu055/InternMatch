@@ -14,7 +14,7 @@ const CandidateProfile = () => {
 
   const fetchProfile = useCallback(async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/profiles');
+      const res = await axios.get('https://intern-match-backend-1.onrender.com/api/profiles');
       if (user?.role === 'Candidate') {
         setProfile(res.data);
         setSkillsInput(res.data.skills.join(', '));
@@ -35,9 +35,9 @@ const CandidateProfile = () => {
     try {
       if (user?.role === 'Candidate') {
         const skills = skillsInput.split(',').map(s => s.trim());
-        await axios.post('http://localhost:5000/api/profiles', { skills, education: profile.education, experience: profile.experience });
+        await axios.post('https://intern-match-backend-1.onrender.com/api/profiles', { skills, education: profile.education, experience: profile.experience });
       } else if (user?.role === 'Employer') {
-        await axios.post('http://localhost:5000/api/profiles', employerProfile);
+        await axios.post('https://intern-match-backend-1.onrender.com/api/profiles', employerProfile);
       }
       alert('Profile updated');
       fetchProfile();
@@ -52,7 +52,7 @@ const CandidateProfile = () => {
     const formData = new FormData();
     formData.append('resume', file);
     try {
-      const res = await axios.post('http://localhost:5000/api/profiles/upload-resume', formData, {
+      const res = await axios.post('https://intern-match-backend-1.onrender.com/api/profiles/upload-resume', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       alert('Resume uploaded');
@@ -68,7 +68,7 @@ const CandidateProfile = () => {
     const formData = new FormData();
     formData.append('profileImage', profileImageFile);
     try {
-      const res = await axios.post('http://localhost:5000/api/profiles/upload-profile-image', formData, {
+      const res = await axios.post('https://intern-match-backend-1.onrender.com/api/profiles/upload-profile-image', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       alert('Profile image uploaded');
@@ -287,7 +287,7 @@ const CandidateProfile = () => {
                     transition={{ delay: 1.2, duration: 0.4 }}
                   >
                     <a
-                      href={`http://localhost:5000${profile.resume_url}`}
+                      href={`https://intern-match-backend-1.onrender.com${profile.resume_url}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center space-x-2 bg-gradient-to-r from-purple-500 to-pink-600 text-white py-2 px-4 rounded-lg hover:from-purple-600 hover:to-pink-700 transition duration-200 shadow-lg"

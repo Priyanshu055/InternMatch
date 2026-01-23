@@ -30,7 +30,7 @@ const PostInternship = () => {
         ...formData,
         required_skills: formData.required_skills.split(',').map(s => s.trim()),
       };
-      await axios.post('http://localhost:5000/api/internships', data);
+      await axios.post('https://intern-match-backend-1.onrender.com/api/internships', data);
       alert('Internship posted successfully!');
       localStorage.setItem('refreshInternships', 'true');
       navigate('/dashboard');

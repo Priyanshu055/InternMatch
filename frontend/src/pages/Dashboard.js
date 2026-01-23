@@ -99,7 +99,7 @@ const Dashboard = () => {
 
   const fetchRecommendedInternships = useCallback(async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/internships/recommended');
+      const res = await axios.get('https://intern-match-backend-1.onrender.com/api/internships/recommended');
       setInternships(res.data);
     } catch (error) {
       console.error('Error fetching internships:', error);
@@ -108,7 +108,7 @@ const Dashboard = () => {
 
   const fetchAllInternships = useCallback(async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/internships');
+      const res = await axios.get('http://intern-match-backend-1.onrender.com/api/internships');
       setAllInternships(res.data);
     } catch (error) {
       console.error('Error fetching all internships:', error);
@@ -118,7 +118,7 @@ const Dashboard = () => {
   const fetchApplications = useCallback(async () => {
     setLoadingApplications(true);
     try {
-      const res = await axios.get('http://localhost:5000/api/applications/candidate');
+      const res = await axios.get('https://intern-match-backend-1.onrender.com/api/applications/candidate');
       setApplications(res.data);
     } catch (error) {
       console.error('Error fetching applications:', error);
@@ -130,7 +130,7 @@ const Dashboard = () => {
   const fetchEmployerApplications = useCallback(async () => {
     setLoadingEmployerApplications(true);
     try {
-      const res = await axios.get('http://localhost:5000/api/applications/employer');
+      const res = await axios.get('https://intern-match-backend-1.onrender.com/api/applications/employer');
       setApplications(res.data);
     } catch (error) {
       console.error('Error fetching applications:', error);
@@ -142,7 +142,7 @@ const Dashboard = () => {
   const fetchEmployerInternships = useCallback(async () => {
     setLoadingEmployerInternships(true);
     try {
-      const res = await axios.get('http://localhost:5000/api/internships/employer');
+      const res = await axios.get('https://intern-match-backend-1.onrender.com/api/internships/employer');
       setEmployerInternships(res.data);
     } catch (error) {
       console.error('Error fetching employer internships:', error);
@@ -154,7 +154,7 @@ const Dashboard = () => {
   const fetchSavedInternships = useCallback(async () => {
     setLoadingSavedInternships(true);
     try {
-      const res = await axios.get('http://localhost:5000/api/internships/saved');
+      const res = await axios.get('https://intern-match-backend-1.onrender.com/api/internships/saved');
       setSavedInternships(res.data);
     } catch (error) {
       console.error('Error fetching saved internships:', error);
@@ -168,7 +168,7 @@ const Dashboard = () => {
       setLoadingMessages(true);
       try {
         const endpoint = user.role === 'Candidate' ? 'candidate' : 'employer';
-        const res = await axios.get(`http://localhost:5000/api/messages/${endpoint}`);
+        const res = await axios.get(`https://intern-match-backend-1.onrender.com/api/messages/${endpoint}`);
         setMessages(res.data);
       } catch (error) {
         console.error('Error fetching messages:', error);
@@ -181,7 +181,7 @@ const Dashboard = () => {
 
   const sendMessage = async (applicationId, message) => {
     try {
-      await axios.post('http://localhost:5000/api/messages', {
+      await axios.post('https://intern-match-backend-1.onrender.com/api/messages', {
         application_id: applicationId,
         message,
       });
@@ -195,7 +195,7 @@ const Dashboard = () => {
   const fetchCandidateProfile = async (applicationId) => {
     try {
       const res = await axios.get(
-        `http://localhost:5000/api/messages/candidate-profile/${applicationId}`
+        `https://intern-match-backend-1.onrender.com/api/messages/candidate-profile/${applicationId}`
       );
       setCandidateProfile(res.data);
       setProfileModalOpen(true);
@@ -206,7 +206,7 @@ const Dashboard = () => {
 
   const markMessageAsRead = async (messageId) => {
     try {
-      await axios.put(`http://localhost:5000/api/messages/${messageId}/read`);
+      await axios.put(`https://intern-match-backend-1.onrender.com/api/messages/${messageId}/read`);
       fetchMessages();
     } catch (error) {
       console.error('Error marking message as read:', error);
@@ -228,7 +228,7 @@ const Dashboard = () => {
     // Optimistically update UI
     setSavedInternshipIds((prev) => new Set([...prev, internshipId]));
     try {
-      await axios.post('http://localhost:5000/api/internships/save', {
+      await axios.post('https://intern-match-backend-1.onrender.com/api/internships/save', {
         internship_id: internshipId,
       });
       alert('Saved successfully');
@@ -252,7 +252,7 @@ const Dashboard = () => {
       return newSet;
     });
     try {
-      await axios.delete(`http://localhost:5000/api/internships/saved/${internshipId}`);
+      await axios.delete(`https://intern-match-backend-1.onrender.com/api/internships/saved/${internshipId}`);
       alert('Unsaved successfully');
       fetchSavedInternships(); // Ensure consistency
     } catch (error) {
@@ -264,7 +264,7 @@ const Dashboard = () => {
 
   const updateApplicationStatus = async (id, status) => {
     try {
-      await axios.put(`http://localhost:5000/api/applications/${id}`, { status });
+      await axios.put(`https://intern-match-backend-1.onrender.com/api/applications/${id}`, { status });
       alert('Status updated');
       fetchEmployerApplications();
     } catch (error) {
@@ -275,7 +275,7 @@ const Dashboard = () => {
   const deleteInternship = async (internshipId) => {
     if (window.confirm('Are you sure you want to delete this internship?')) {
       try {
-        await axios.delete(`http://localhost:5000/api/internships/${internshipId}`);
+        await axios.delete(`https://intern-match-backend-1.onrender.com/api/internships/${internshipId}`);
         alert('Internship deleted successfully');
         fetchEmployerInternships();
       } catch (error) {
@@ -288,7 +288,7 @@ const Dashboard = () => {
     const newDeadline = new Date(currentDeadline || Date.now());
     newDeadline.setDate(newDeadline.getDate() + 7);
     try {
-      await axios.put(`http://localhost:5000/api/internships/${internshipId}`, {
+      await axios.put(`https://intern-match-backend-1.onrender.com/api/internships/${internshipId}`, {
         applicationDeadline: newDeadline,
       });
       alert('Deadline extended by 7 days');
@@ -632,7 +632,7 @@ const Dashboard = () => {
                           <div className="flex items-center space-x-2">
                             {internship.company_id.profileImage && (
                               <img
-                                src={`http://localhost:5000${internship.company_id.profileImage}`}
+                                src={`https://intern-match-backend-1.onrender.com/${internship.company_id.profileImage}`}
                                 alt={`${internship.company_id.name} profile`}
                                 className="w-6 h-6 rounded-full object-cover"
                               />
@@ -789,7 +789,7 @@ const Dashboard = () => {
                             <div className="flex items-center space-x-2">
                               {internship.company_id.profileImage && (
                                 <img
-                                  src={`http://localhost:5000${internship.company_id.profileImage}`}
+                                  src={`https://intern-match-backend-1.onrender.com${internship.company_id.profileImage}`}
                                   alt={`${internship.company_id.name} profile`}
                                   className="w-6 h-6 rounded-full object-cover"
                                 />
@@ -1203,7 +1203,7 @@ const Dashboard = () => {
                             {app.resume_url && (
                               <div className="mb-4">
                                 <a
-                                  href={`http://localhost:5000/${app.resume_url}`}
+                                  href={`https://intern-match-backend-1.onrender.com/${app.resume_url}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="inline-flex items-center space-x-2 text-blue-600 hover:text-blue-800 transition duration-200"
@@ -1445,7 +1445,7 @@ const Dashboard = () => {
                   <button
                     onClick={() =>
                       window.open(
-                        `http://localhost:5000/${candidateProfile.profile.resume_url}`,
+                        `https://intern-match-backend-1.onrender.com/${candidateProfile.profile.resume_url}`,
                         '_blank'
                       )
                     }

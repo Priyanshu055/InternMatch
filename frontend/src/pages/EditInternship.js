@@ -4,6 +4,7 @@ import { FaBriefcase } from 'react-icons/fa';
 import AuthContext from '../context/AuthContext';
 import axios from 'axios';
 import { useNavigate, useParams } from 'react-router-dom';
+import { API_URL } from '../config';
 
 const EditInternship = () => {
   const { user } = useContext(AuthContext);
@@ -23,7 +24,7 @@ const EditInternship = () => {
   useEffect(() => {
     const fetchInternship = async () => {
       try {
-        const res = await axios.get(`https://intern-match-backend-1.onrender.com/api/internships/${id}`);
+        const res = await axios.get(`${API_URL}/api/internships/${id}`);
         const internship = res.data;
         setFormData({
           title: internship.title,
@@ -59,7 +60,7 @@ const EditInternship = () => {
         required_skills: formData.required_skills.split(',').map(s => s.trim()),
         applicationDeadline: formData.applicationDeadline ? new Date(formData.applicationDeadline) : null,
       };
-      await axios.put(`https://intern-match-backend-1.onrender.com/api/internships/${id}`, data);
+      await axios.put(`${API_URL}/api/internships/${id}`, data);
       alert('Internship updated successfully!');
       localStorage.setItem('refreshInternships', 'true');
       navigate('/dashboard');

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { FaTimes, FaPaperPlane } from 'react-icons/fa';
 import axios from 'axios';
+import { API_URL } from '../config';
 
 const ApplyModal = ({ internship, onClose, onApply }) => {
   const [formData, setFormData] = useState({
@@ -40,14 +41,14 @@ const ApplyModal = ({ internship, onClose, onApply }) => {
         formDataToSend.append('resume', resumeFile);
       }
 
-      await axios.post('https://intern-match-backend-1.onrender.com/api/applications', formDataToSend, {
+      await axios.post(`${API_URL}/api/applications`, formDataToSend, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
       });
 
       // Auto-save the internship after applying
-      await axios.post('https://intern-match-backend-1.onrender.com/api/internships/save', { internship_id: internship._id }, {
+      await axios.post(`${API_URL}/api/internships/save`, { internship_id: internship._id }, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },

@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { FaUser, FaGraduationCap, FaBriefcase, FaFileUpload, FaRocket, FaSave, FaEye, FaBuilding, FaIndustry, FaGlobe, FaInfoCircle, FaCamera } from 'react-icons/fa';
 import AuthContext from '../context/AuthContext';
 import axios from 'axios';
+import { API_URL } from '../config';
 
 const CandidateProfile = () => {
   const { user, setUser } = useContext(AuthContext);
@@ -14,7 +15,7 @@ const CandidateProfile = () => {
 
   const fetchProfile = useCallback(async () => {
     try {
-      const res = await axios.get('https://intern-match-backend-1.onrender.com/api/profiles');
+      const res = await axios.get(`${API_URL}/api/profiles`);
       if (user?.role === 'Candidate') {
         setProfile(res.data);
         setSkillsInput(res.data.skills.join(', '));
@@ -35,9 +36,9 @@ const CandidateProfile = () => {
     try {
       if (user?.role === 'Candidate') {
         const skills = skillsInput.split(',').map(s => s.trim());
-        await axios.post('https://intern-match-backend-1.onrender.com/api/profiles', { skills, education: profile.education, experience: profile.experience });
+        await axios.post(`${API_URL}/api/profiles`, { skills, education: profile.education, experience: profile.experience });
       } else if (user?.role === 'Employer') {
-        await axios.post('https://intern-match-backend-1.onrender.com/api/profiles', employerProfile);
+        await axios.post(`${API_URL}/api/profiles`, employerProfile);
       }
       alert('Profile updated');
       fetchProfile();
@@ -52,7 +53,7 @@ const CandidateProfile = () => {
     const formData = new FormData();
     formData.append('resume', file);
     try {
-      const res = await axios.post('https://intern-match-backend-1.onrender.com/api/profiles/upload-resume', formData, {
+      const res = await axios.post(`${API_URL}/api/profiles/upload-resume`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       alert('Resume uploaded');
@@ -68,7 +69,7 @@ const CandidateProfile = () => {
     const formData = new FormData();
     formData.append('profileImage', profileImageFile);
     try {
-      const res = await axios.post('https://intern-match-backend-1.onrender.com/api/profiles/upload-profile-image', formData, {
+      const res = await axios.post(`${API_URL}/api/profiles/upload-profile-image`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       alert('Profile image uploaded');
@@ -287,7 +288,7 @@ const CandidateProfile = () => {
                     transition={{ delay: 1.2, duration: 0.4 }}
                   >
                     <a
-                      href={`https://intern-match-backend-1.onrender.com${profile.resume_url}`}
+                      href={`${API_URL}${profile.resume_url}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center space-x-2 bg-gradient-to-r from-purple-500 to-pink-600 text-white py-2 px-4 rounded-lg hover:from-purple-600 hover:to-pink-700 transition duration-200 shadow-lg"

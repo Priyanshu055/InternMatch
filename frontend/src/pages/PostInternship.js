@@ -4,6 +4,7 @@ import { FaBriefcase } from 'react-icons/fa';
 import AuthContext from '../context/AuthContext';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { API_URL } from '../config';
 
 const PostInternship = () => {
   const { user } = useContext(AuthContext);
@@ -30,7 +31,7 @@ const PostInternship = () => {
         ...formData,
         required_skills: formData.required_skills.split(',').map(s => s.trim()),
       };
-      await axios.post('https://intern-match-backend-1.onrender.com/api/internships', data);
+      await axios.post(`${API_URL}/api/internships`, data);
       alert('Internship posted successfully!');
       localStorage.setItem('refreshInternships', 'true');
       navigate('/dashboard');

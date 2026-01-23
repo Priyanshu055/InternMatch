@@ -27,6 +27,7 @@ import {
 import AuthContext from '../context/AuthContext';
 import ApplyModal from '../components/ApplyModal';
 import axios from 'axios';
+import { API_URL } from '../config';
 
 const Dashboard = () => {
   const { user, logout } = useContext(AuthContext);
@@ -99,7 +100,7 @@ const Dashboard = () => {
 
   const fetchRecommendedInternships = useCallback(async () => {
     try {
-      const res = await axios.get('https://intern-match-backend-1.onrender.com/api/internships/recommended');
+      const res = await axios.get(`${API_URL}/api/internships/recommended`);
       setInternships(res.data);
     } catch (error) {
       console.error('Error fetching internships:', error);
@@ -108,7 +109,7 @@ const Dashboard = () => {
 
   const fetchAllInternships = useCallback(async () => {
     try {
-      const res = await axios.get('http://intern-match-backend-1.onrender.com/api/internships');
+      const res = await axios.get(`${API_URL}/api/internships`);
       setAllInternships(res.data);
     } catch (error) {
       console.error('Error fetching all internships:', error);
@@ -118,7 +119,7 @@ const Dashboard = () => {
   const fetchApplications = useCallback(async () => {
     setLoadingApplications(true);
     try {
-      const res = await axios.get('https://intern-match-backend-1.onrender.com/api/applications/candidate');
+      const res = await axios.get(`${API_URL}/api/applications/candidate`);
       setApplications(res.data);
     } catch (error) {
       console.error('Error fetching applications:', error);
@@ -130,7 +131,7 @@ const Dashboard = () => {
   const fetchEmployerApplications = useCallback(async () => {
     setLoadingEmployerApplications(true);
     try {
-      const res = await axios.get('https://intern-match-backend-1.onrender.com/api/applications/employer');
+      const res = await axios.get(`${API_URL}/api/applications/employer`);
       setApplications(res.data);
     } catch (error) {
       console.error('Error fetching applications:', error);
@@ -142,7 +143,7 @@ const Dashboard = () => {
   const fetchEmployerInternships = useCallback(async () => {
     setLoadingEmployerInternships(true);
     try {
-      const res = await axios.get('https://intern-match-backend-1.onrender.com/api/internships/employer');
+      const res = await axios.get(`${API_URL}/api/internships/employer`);
       setEmployerInternships(res.data);
     } catch (error) {
       console.error('Error fetching employer internships:', error);
@@ -154,7 +155,7 @@ const Dashboard = () => {
   const fetchSavedInternships = useCallback(async () => {
     setLoadingSavedInternships(true);
     try {
-      const res = await axios.get('https://intern-match-backend-1.onrender.com/api/internships/saved');
+      const res = await axios.get(`${API_URL}/api/internships/saved`);
       setSavedInternships(res.data);
     } catch (error) {
       console.error('Error fetching saved internships:', error);
@@ -168,7 +169,7 @@ const Dashboard = () => {
       setLoadingMessages(true);
       try {
         const endpoint = user.role === 'Candidate' ? 'candidate' : 'employer';
-        const res = await axios.get(`https://intern-match-backend-1.onrender.com/api/messages/${endpoint}`);
+        const res = await axios.get(`${API_URL}/api/messages/${endpoint}`);
         setMessages(res.data);
       } catch (error) {
         console.error('Error fetching messages:', error);
@@ -181,7 +182,7 @@ const Dashboard = () => {
 
   const sendMessage = async (applicationId, message) => {
     try {
-      await axios.post('https://intern-match-backend-1.onrender.com/api/messages', {
+      await axios.post(`${API_URL}/api/messages`, {
         application_id: applicationId,
         message,
       });
@@ -195,7 +196,7 @@ const Dashboard = () => {
   const fetchCandidateProfile = async (applicationId) => {
     try {
       const res = await axios.get(
-        `https://intern-match-backend-1.onrender.com/api/messages/candidate-profile/${applicationId}`
+        `${API_URL}/api/messages/candidate-profile/${applicationId}`
       );
       setCandidateProfile(res.data);
       setProfileModalOpen(true);
@@ -206,7 +207,7 @@ const Dashboard = () => {
 
   const markMessageAsRead = async (messageId) => {
     try {
-      await axios.put(`https://intern-match-backend-1.onrender.com/api/messages/${messageId}/read`);
+      await axios.put(`${API_URL}/api/messages/${messageId}/read`);
       fetchMessages();
     } catch (error) {
       console.error('Error marking message as read:', error);
@@ -228,7 +229,7 @@ const Dashboard = () => {
     // Optimistically update UI
     setSavedInternshipIds((prev) => new Set([...prev, internshipId]));
     try {
-      await axios.post('https://intern-match-backend-1.onrender.com/api/internships/save', {
+      await axios.post(`${API_URL}/api/internships/save`, {
         internship_id: internshipId,
       });
       alert('Saved successfully');
@@ -252,7 +253,7 @@ const Dashboard = () => {
       return newSet;
     });
     try {
-      await axios.delete(`https://intern-match-backend-1.onrender.com/api/internships/saved/${internshipId}`);
+      await axios.delete(`${API_URL}/api/internships/saved/${internshipId}`);
       alert('Unsaved successfully');
       fetchSavedInternships(); // Ensure consistency
     } catch (error) {
@@ -264,7 +265,7 @@ const Dashboard = () => {
 
   const updateApplicationStatus = async (id, status) => {
     try {
-      await axios.put(`https://intern-match-backend-1.onrender.com/api/applications/${id}`, { status });
+      await axios.put(`${API_URL}/api/applications/${id}`, { status });
       alert('Status updated');
       fetchEmployerApplications();
     } catch (error) {
@@ -275,7 +276,7 @@ const Dashboard = () => {
   const deleteInternship = async (internshipId) => {
     if (window.confirm('Are you sure you want to delete this internship?')) {
       try {
-        await axios.delete(`https://intern-match-backend-1.onrender.com/api/internships/${internshipId}`);
+        await axios.delete(`${API_URL}/api/internships/${internshipId}`);
         alert('Internship deleted successfully');
         fetchEmployerInternships();
       } catch (error) {
@@ -288,7 +289,7 @@ const Dashboard = () => {
     const newDeadline = new Date(currentDeadline || Date.now());
     newDeadline.setDate(newDeadline.getDate() + 7);
     try {
-      await axios.put(`https://intern-match-backend-1.onrender.com/api/internships/${internshipId}`, {
+      await axios.put(`${API_URL}/api/internships/${internshipId}`, {
         applicationDeadline: newDeadline,
       });
       alert('Deadline extended by 7 days');
@@ -337,23 +338,23 @@ const Dashboard = () => {
   const sidebarItems =
     user.role === 'Candidate'
       ? [
-          { id: 'overview', label: 'Overview', icon: FaHome },
-          { id: 'browse', label: 'Browse Internships', icon: FaSearch },
-          { id: 'applications', label: 'My Applications', icon: FaList },
-          { id: 'saved', label: 'Saved', icon: FaBookmark },
-          { id: 'messages', label: 'Messages', icon: FaEnvelope },
-          { id: 'profile', label: 'Profile', icon: FaUser },
-          { id: 'resources', label: 'Resources', icon: FaGraduationCap },
-        ]
+        { id: 'overview', label: 'Overview', icon: FaHome },
+        { id: 'browse', label: 'Browse Internships', icon: FaSearch },
+        { id: 'applications', label: 'My Applications', icon: FaList },
+        { id: 'saved', label: 'Saved', icon: FaBookmark },
+        { id: 'messages', label: 'Messages', icon: FaEnvelope },
+        { id: 'profile', label: 'Profile', icon: FaUser },
+        { id: 'resources', label: 'Resources', icon: FaGraduationCap },
+      ]
       : [
-          { id: 'overview', label: 'Overview', icon: FaHome },
-          { id: 'post', label: 'Post Internship', icon: FaBriefcase },
-          { id: 'internships', label: 'My Internships', icon: FaBriefcase },
-          { id: 'applications', label: 'Manage Applications', icon: FaList },
-          { id: 'analytics', label: 'Analytics', icon: FaChartBar },
-          { id: 'messages', label: 'Messages', icon: FaEnvelope },
-          { id: 'profile', label: 'Profile', icon: FaUser },
-        ];
+        { id: 'overview', label: 'Overview', icon: FaHome },
+        { id: 'post', label: 'Post Internship', icon: FaBriefcase },
+        { id: 'internships', label: 'My Internships', icon: FaBriefcase },
+        { id: 'applications', label: 'Manage Applications', icon: FaList },
+        { id: 'analytics', label: 'Analytics', icon: FaChartBar },
+        { id: 'messages', label: 'Messages', icon: FaEnvelope },
+        { id: 'profile', label: 'Profile', icon: FaUser },
+      ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 relative overflow-hidden flex">
@@ -421,11 +422,10 @@ const Dashboard = () => {
                 whileHover={{ scale: 1.05, backgroundColor: '#f3f4f6' }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setActiveTab(item.id)}
-                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition duration-200 ${
-                  activeTab === item.id
-                    ? 'bg-blue-100 text-blue-600'
-                    : 'text-gray-700 hover:bg-gray-100'
-                }`}
+                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition duration-200 ${activeTab === item.id
+                  ? 'bg-blue-100 text-blue-600'
+                  : 'text-gray-700 hover:bg-gray-100'
+                  }`}
               >
                 <item.icon />
                 <span>{item.label}</span>
@@ -632,7 +632,7 @@ const Dashboard = () => {
                           <div className="flex items-center space-x-2">
                             {internship.company_id.profileImage && (
                               <img
-                                src={`https://intern-match-backend-1.onrender.com/${internship.company_id.profileImage}`}
+                                src={`${API_URL}/${internship.company_id.profileImage}`}
                                 alt={`${internship.company_id.name} profile`}
                                 className="w-6 h-6 rounded-full object-cover"
                               />
@@ -722,13 +722,12 @@ const Dashboard = () => {
                               {app.internship_id.company_id.name}
                             </p>
                             <p
-                              className={`text-sm font-medium mb-4 px-3 py-1 rounded-full inline-block ${
-                                app.status === 'Approved'
-                                  ? 'text-green-600 bg-green-100'
-                                  : app.status === 'Rejected'
+                              className={`text-sm font-medium mb-4 px-3 py-1 rounded-full inline-block ${app.status === 'Approved'
+                                ? 'text-green-600 bg-green-100'
+                                : app.status === 'Rejected'
                                   ? 'text-red-600 bg-red-100'
                                   : 'text-yellow-600 bg-yellow-100'
-                              }`}
+                                }`}
                             >
                               Status: {app.status}
                             </p>
@@ -789,7 +788,7 @@ const Dashboard = () => {
                             <div className="flex items-center space-x-2">
                               {internship.company_id.profileImage && (
                                 <img
-                                  src={`https://intern-match-backend-1.onrender.com${internship.company_id.profileImage}`}
+                                  src={`${API_URL}${internship.company_id.profileImage}`}
                                   alt={`${internship.company_id.name} profile`}
                                   className="w-6 h-6 rounded-full object-cover"
                                 />
@@ -849,9 +848,8 @@ const Dashboard = () => {
                             key={msg._id}
                             variants={itemVariants}
                             whileHover={{ scale: 1.02 }}
-                            className={`bg-white p-6 rounded-xl shadow-xl border border-gray-200 ${
-                              !msg.is_read ? 'border-l-4 border-l-blue-500' : ''
-                            }`}
+                            className={`bg-white p-6 rounded-xl shadow-xl border border-gray-200 ${!msg.is_read ? 'border-l-4 border-l-blue-500' : ''
+                              }`}
                           >
                             <div className="flex justify-between items-start mb-2">
                               <h3 className="text-lg font-semibold text-gray-800">
@@ -1190,20 +1188,19 @@ const Dashboard = () => {
                             </h3>
                             <p className="text-gray-600 mb-2">{app.candidate_id.name}</p>
                             <p
-                              className={`text-sm font-medium mb-4 px-3 py-1 rounded-full inline-block ${
-                                app.status === 'Approved'
-                                  ? 'text-green-600 bg-green-100'
-                                  : app.status === 'Rejected'
+                              className={`text-sm font-medium mb-4 px-3 py-1 rounded-full inline-block ${app.status === 'Approved'
+                                ? 'text-green-600 bg-green-100'
+                                : app.status === 'Rejected'
                                   ? 'text-red-600 bg-red-100'
                                   : 'text-yellow-600 bg-yellow-100'
-                              }`}
+                                }`}
                             >
                               Status: {app.status}
                             </p>
                             {app.resume_url && (
                               <div className="mb-4">
                                 <a
-                                  href={`https://intern-match-backend-1.onrender.com/${app.resume_url}`}
+                                  href={`${API_URL}/${app.resume_url}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="inline-flex items-center space-x-2 text-blue-600 hover:text-blue-800 transition duration-200"
@@ -1298,9 +1295,8 @@ const Dashboard = () => {
                           key={msg._id}
                           variants={itemVariants}
                           whileHover={{ scale: 1.02 }}
-                          className={`bg-white p-6 rounded-xl shadow-xl border border-gray-200 ${
-                            !msg.is_read ? 'border-l-4 border-l-blue-500' : ''
-                          }`}
+                          className={`bg-white p-6 rounded-xl shadow-xl border border-gray-200 ${!msg.is_read ? 'border-l-4 border-l-blue-500' : ''
+                            }`}
                         >
                           <div className="flex justify-between items-start mb-2">
                             <h3 className="text-lg font-semibold text-gray-800">
@@ -1445,7 +1441,7 @@ const Dashboard = () => {
                   <button
                     onClick={() =>
                       window.open(
-                        `https://intern-match-backend-1.onrender.com/${candidateProfile.profile.resume_url}`,
+                        `${API_URL}/${candidateProfile.profile.resume_url}`,
                         '_blank'
                       )
                     }
